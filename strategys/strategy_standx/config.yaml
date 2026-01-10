@@ -14,3 +14,7 @@ grid:
   order_quantity: 0.001
   sleep_interval: 1
 
+risk:
+  enable: true
+  adx_threshold: 25
+  adx_max: 60
