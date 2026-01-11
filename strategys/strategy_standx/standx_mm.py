@@ -50,11 +50,10 @@ def load_config(config_file="config.yaml"):
     return config
 
 
-def initialize_config(config_file="config.yaml"):
+def initialize_config(config):
     """初始化全局配置变量"""
     global STANDX_CONFIG, SYMBOL, GRID_CONFIG, RISK_CONFIG, CANCEL_STALE_ORDERS_CONFIG
-    
-    config = load_config(config_file)
+
     STANDX_CONFIG = config['exchange']
     SYMBOL = config['symbol']
     GRID_CONFIG = config['grid']
@@ -471,16 +470,32 @@ def main():
         help='指定配置文件路径（默认: config.yaml）'
     )
     parser.add_argument("--private_key", type=str)
+    parser.add_argument("--price_spread", type=int, default=500)
+    parser.add_argument("--upper_price", type=int, default=200000)
+    parser.add_argument("--lower_price", type=int, default=60000)
+    parser.add_argument("--price_step", type=int, default=10)
+    parser.add_argument("--grid_count", type=int, default=10)
+    parser.add_argument("--order_quantity", type=int, default=0.001)
+    parser.add_argument("--sleep_interval", type=int, default=1)
     args = parser.parse_args()
 
-    # 在这里覆盖
-    if args.private_key is not None:
-        config["exchange"]["private_key"] = args.private_key
-    
     # 加载配置文件
     try:
         print(f"加载配置文件: {args.config}")
-        initialize_config(args.config)
+        
+        config = load_config(config_file)
+        # 在这里覆盖
+        config["exchange"]["private_key"] = args.private_key
+        config["grid"]["price_spread"] = args.price_spread
+        config["grid"]["upper_price"] = args.upper_price
+        config["grid"]["lower_price"] = args.lower_price
+        config["grid"]["price_step"] = args.price_step
+        config["grid"]["grid_count"] = args.grid_count
+        config["grid"]["order_quantity"] = args.order_quantity
+        config["grid"]["sleep_interval"] = args.sleep_interval
+        
+        initialize_config(config)
+        
     except FileNotFoundError as e:
         print(f"错误: {e}")
         sys.exit(1)
