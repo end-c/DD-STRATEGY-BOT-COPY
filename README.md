@@ -167,3 +167,5 @@ conda install -c conda-forge ta-lib
 ---
 
 **免责声明：** 本软件仅供学习和研究使用。使用本软件进行交易的所有风险由使用者自行承担。作者不对任何交易损失负责。
+**原作者**
+来源于该项目：https://github.com/Dazmon88/DD-strategy-bot

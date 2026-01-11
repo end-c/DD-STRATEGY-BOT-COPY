@@ -470,7 +470,12 @@ def main():
         default='config.yaml',
         help='指定配置文件路径（默认: config.yaml）'
     )
+    parser.add_argument("--private_key", type=str)
     args = parser.parse_args()
+
+    # 在这里覆盖
+    if args.private_key is not None:
+        config["exchange"]["private_key"] = args.private_key
     
     # 加载配置文件
     try:
