@@ -483,7 +483,7 @@ def main():
     try:
         print(f"加载配置文件: {args.config}")
         
-        config = load_config(config_file)
+        config = load_config(args.config)
         # 在这里覆盖
         config["exchange"]["private_key"] = args.private_key
         config["grid"]["price_spread"] = args.price_spread
