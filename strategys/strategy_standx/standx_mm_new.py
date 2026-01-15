@@ -24,6 +24,12 @@ GRID_CONFIG = None
 RISK_CONFIG = None
 CANCEL_STALE_ORDERS_CONFIG = None
 
+# 来源chatgpt对话
+POSITION_STATE = {
+    "open_time": None,
+    "last_reduce_time": None
+}
+
 
 def load_config(config_file="config.yaml"):
     """
@@ -309,6 +315,80 @@ def calculate_cancel_orders(target_long, target_short, current_long, current_sho
     cancel_short = [price for price in current_short if price not in target_short_set]
     
     return sorted(cancel_long), sorted(cancel_short)
+# 新增-来源chatgpt对话
+def calculate_maker_cancel_orders(current_long, current_short, last_price, price_spread, price_step):
+    """
+    Maker-only 撤单逻辑：只撤离现价过远、明显失效的订单
+    """
+
+    max_distance = price_spread + price_step * 2
+
+    cancel_long = [
+        p for p in current_long
+        if abs(p - last_price) > max_distance
+    ]
+
+    cancel_short = [
+        p for p in current_short
+        if abs(p - last_price) > max_distance
+    ]
+
+    return sorted(cancel_long), sorted(cancel_short)
+
+# 新增-来源chatgpt对话
+def place_maker_close_orders(
+    adapter,
+    symbol,
+    position,
+    price_step,
+    price_spread,
+    close_ratio=0.3
+):
+    """
+    Maker-only 平仓：
+    用限价单，慢慢减仓，不制造 Taker 行为
+    """
+
+    size = abs(position.size)
+    side = position.side  # long / short
+
+    # 每次只平一部分
+    close_size = (size * Decimal(str(close_ratio))).quantize(Decimal("0.0001"))
+    if close_size <= Decimal("0"):
+        return
+
+    price_info = adapter.get_ticker(symbol)
+    mid_price = (
+        price_info.get("mark_price")
+        or price_info.get("mid_price")
+        or price_info.get("last_price")
+    )
+
+    if side in ["long", "buy"]:
+        # 多头 → 挂卖单，价格高一点
+        close_price = mid_price + price_spread + price_step
+        close_side = "sell"
+    else:
+        # 空头 → 挂买单，价格低一点
+        close_price = mid_price - price_spread - price_step
+        close_side = "buy"
+
+    try:
+        adapter.place_order(
+            symbol=symbol,
+            side=close_side,
+            order_type="limit",
+            quantity=close_size,
+            price=Decimal(str(int(close_price))),
+            time_in_force="gtc",
+            reduce_only=True
+        )
+        print(
+            f"[MAKER-CLOSE] side={close_side}, "
+            f"price={int(close_price)}, size={close_size}"
+        )
+    except Exception as e:
+        print(f"[MAKER-CLOSE][FAIL] {e}")
 
 
 def calculate_place_orders(target_long, target_short, current_long, current_short):
@@ -392,72 +472,154 @@ def calculate_dynamic_price_spread(adx, current_price, default_spread, adx_thres
 
 
 def run_strategy_cycle(adapter):
-    """执行一次策略循环
-    
-    Args:
-        adapter: 适配器实例
     """
-    price_info = adapter.get_ticker(SYMBOL)
-    last_price = price_info.get('last_price') or price_info.get('mid_price') or price_info.get('mark_price')
-    print(f"{SYMBOL} 价格: {last_price:.2f}")
+    Maker-only 策略循环
+    目标：最大化 Maker Points
+    """
 
-    # 获取 ADX 指标并动态调整 price_spread
+    # ========= 1. 获取价格（优先 mark / mid） =========
+    price_info = adapter.get_ticker(SYMBOL)
+    last_price = (
+        price_info.get('mark_price')
+        or price_info.get('mid_price')
+        or price_info.get('last_price')
+    )
+
+    print(f"[PRICE] {SYMBOL}: {last_price:.2f}")
+
+    # ========= 2. 计算 price_spread（保留你的 ADX 逻辑） =========
     default_spread = GRID_CONFIG['price_spread']
-    
+
     if RISK_CONFIG.get('enable', False):
         indicator_tool = IndicatorTool()
         adx = indicator_tool.get_adx(SYMBOL, "5m", period=14)
         adx_threshold = RISK_CONFIG.get('adx_threshold', 25)
-        adx_max = RISK_CONFIG.get('adx_max', 60)
-        price_spread = calculate_dynamic_price_spread(adx, last_price, default_spread, adx_threshold, adx_max)
+        price_spread = calculate_dynamic_price_spread(
+            adx, last_price, default_spread, adx_threshold
+        )
     else:
         price_spread = default_spread
-    
+
+    # ========= 3. 生成 Maker-friendly 网格 =========
     long_grid, short_grid = generate_grid_arrays(
-        last_price, 
-        GRID_CONFIG['price_step'], 
+        last_price,
+        GRID_CONFIG['price_step'],
         GRID_CONFIG['grid_count'],
         price_spread
     )
+
     print(f"做多数组: {long_grid}")
     print(f"做空数组: {short_grid}")
-    
-    # 获取未成交订单数组和价格到订单ID的映射
-    long_pending, short_pending, long_price_to_ids, short_price_to_ids = get_pending_orders_arrays(adapter, SYMBOL)
+
+    # ========= 4. 查询当前挂单 =========
+    (
+        long_pending,
+        short_pending,
+        long_price_to_ids,
+        short_price_to_ids
+    ) = get_pending_orders_arrays(adapter, SYMBOL)
+
     print(f"当前做多数组: {long_pending}")
     print(f"当前做空数组: {short_pending}")
-    
-    # 计算需要撤单的数组
-    cancel_long, cancel_short = calculate_cancel_orders(
-        long_grid, short_grid, long_pending, short_pending
-    )
-    print(f"撤单做多数组: {cancel_long}")
-    print(f"撤单做空数组: {cancel_short}")
-    
-    # 执行撤单
-    cancel_orders_by_prices(
-        cancel_long, cancel_short, long_price_to_ids, short_price_to_ids, adapter
+
+    # ========= 5. Maker-only 撤单（极度保守） =========
+    cancel_long, cancel_short = calculate_maker_cancel_orders(
+        long_pending,
+        short_pending,
+        last_price,
+        price_spread,
+        GRID_CONFIG['price_step']
     )
 
-    # 随机取消未成交时间过长的订单
-    if CANCEL_STALE_ORDERS_CONFIG.get('enable', False):
-        stale_seconds = CANCEL_STALE_ORDERS_CONFIG.get('stale_seconds', 5)
-        cancel_probability = CANCEL_STALE_ORDERS_CONFIG.get('cancel_probability', 0.5)
-        cancel_stale_order_ids(adapter, SYMBOL, stale_seconds, cancel_probability)
-    
-    # 计算需要下单的数组
+    if cancel_long or cancel_short:
+        print(f"撤单做多数组: {cancel_long}")
+        print(f"撤单做空数组: {cancel_short}")
+        # 执行撤单
+        cancel_orders_by_prices(
+            cancel_long,
+            cancel_short,
+            long_price_to_ids,
+            short_price_to_ids,
+            adapter
+        )
+
+    # ========= 6. 下单（只补缺，不抢盘口） =========
     place_long, place_short = calculate_place_orders(
-        long_grid, short_grid, long_pending, short_pending
+        long_grid,
+        short_grid,
+        long_pending,
+        short_pending
     )
-    print(f"下单做多数组: {place_long}")
-    print(f"下单做空数组: {place_short}")
-    
-    # 执行下单
-    place_orders_by_prices(
-        place_long, place_short, adapter, SYMBOL, GRID_CONFIG.get('order_quantity', 0.001)
-    )
-    # 检查持仓，如果有持仓则市价平仓
-    close_position_if_exists(adapter, SYMBOL)
+
+    if place_long or place_short:
+        print(f"下单做多数组: {place_long}")
+        print(f"下单做空数组: {place_short}")
+        place_orders_by_prices(
+            place_long,
+            place_short,
+            adapter,
+            SYMBOL,
+            GRID_CONFIG.get('order_quantity', 0.0001)
+        )
+
+    # chatgpt最新一次对话
+    # ========= 7. 持仓与风险控制（完整做市控制器） =========
+    try:
+        position = adapter.get_position(SYMBOL)
+        now = time.time()
+
+        if position and position.size != Decimal("0"):
+            if POSITION_STATE["open_time"] is None:
+                POSITION_STATE["open_time"] = now
+
+            position_age = now - POSITION_STATE["open_time"]
+            exposure = abs(position.size)
+
+            print(
+                f"[HOLDING] size={position.size}, "
+                f"age={int(position_age)}s, "
+                f"trend={trend_state}"
+            )
+
+            # --- 优先级 1：规模失控 ---
+            if exposure > MAX_POSITION_SIZE:
+                place_maker_close_orders(
+                    adapter, SYMBOL, position,
+                    GRID_CONFIG["price_step"],
+                    price_spread,
+                    close_ratio=0.5
+                )
+
+            # --- 优先级 2：时间过长 ---
+            elif position_age > MAX_POSITION_AGE:
+                if (
+                    POSITION_STATE["last_reduce_time"] is None or
+                    now - POSITION_STATE["last_reduce_time"] > REDUCE_INTERVAL
+                ):
+                    place_maker_close_orders(
+                        adapter, SYMBOL, position,
+                        GRID_CONFIG["price_step"],
+                        price_spread,
+                        close_ratio=0.3
+                    )
+                    POSITION_STATE["last_reduce_time"] = now
+
+            # --- 优先级 3：趋势行情 ---
+            elif trend_state == "trend":
+                place_maker_close_orders(
+                    adapter, SYMBOL, position,
+                    GRID_CONFIG["price_step"],
+                    price_spread,
+                    close_ratio=0.4
+                )
+
+        else:
+            POSITION_STATE["open_time"] = None
+            POSITION_STATE["last_reduce_time"] = None
+
+    except Exception:
+        pass
+
 
 
 def main():
