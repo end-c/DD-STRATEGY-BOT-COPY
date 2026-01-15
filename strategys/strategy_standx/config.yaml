@@ -6,15 +6,20 @@ exchange:
 symbol: BTC-USD
 
 grid:
-  upper_price: 200000
-  lower_price: 60000
-  price_step: 10
-  grid_count: 10
-  price_spread: 500
-  order_quantity: 0.001
-  sleep_interval: 1
+  upper_price: 100000
+  lower_price: 90000
+  price_step: 20
+  grid_count: 5
+  price_spread: 200
+  order_quantity: 0.0001
+  sleep_interval: 5
 
 risk:
   enable: true
   adx_threshold: 25
   adx_max: 60
+
+cancel_stale_orders:
+  enable: false
+  stale_seconds: 5
+  cancel_probability: 0.5
