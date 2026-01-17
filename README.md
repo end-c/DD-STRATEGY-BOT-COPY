@@ -171,20 +171,25 @@ conda install -c conda-forge ta-lib
 **原作者**
 来源于该项目：https://github.com/Dazmon88/DD-strategy-bot
 
-<!-- 运行脚本前：查看powershell运行状态 Unblock-File .\run_prod_new.ps1 -->
-<!-- 临时文件mnemonics.txt -->
 
 
-**请看自己**
-第一步
-## 安装
+
+##请看自己
+**运行脚本前：**
+查看powershell运行状态 Unblock-File .\run_prod_new.ps1
+
+**临时文件**
+mnemonics.txt
+
+**第一步**
+**安装
  pip install web3>=6.0.0 eth-account>=0.8.0 cryptography>=41.0.
-##  运行得到加密私钥
+**运行得到加密私钥**
  python D:\google_downloads_3\DD-strategy-bot-main\strategys\strategy_standx\paisheng_batch_encrypted.py
 
-第二步
+**第二步**
 检查一下2个python文件：decrypt_keys.py和standx_mm_new.py，策略参数、源文件路径啥的，一个脚本文件run_prod_new.ps1
 
-第三步
+**第三步**
 .\RunScripts\run_prod_new.ps1 -ACCOUNTS xx-xx -KEY_PREFIX account_xx
 或者.\RunScripts\run_prod_new.ps1 -ACCOUNTS "15,16-17" -KEY_PREFIX "account_hp"
