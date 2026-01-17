@@ -176,14 +176,20 @@ conda install -c conda-forge ta-lib
 
 ## 请看自己
 **运行脚本前：**
-查看powershell运行状态 Unblock-File .\run_prod_new.ps1
+
+查看powershell运行状态 GET-ExecutionPolicy
+SET-ExecutionPolicy -Scope CurrentUser RemoteSigned
+Unblock-File .\run_prod_new.ps1
 
 **临时文件**
 mnemonics.txt
 
 **第一步**
-**安装
- pip install web3>=6.0.0 eth-account>=0.8.0 cryptography>=41.0.
+
+**安装**
+进到项目工程文件
+pip install web3>=6.0.0 eth-account>=0.8.0 cryptography>=41.0.0
+
 **运行得到加密私钥**
  python D:\google_downloads_3\DD-strategy-bot-main\strategys\strategy_standx\paisheng_batch_encrypted.py
 

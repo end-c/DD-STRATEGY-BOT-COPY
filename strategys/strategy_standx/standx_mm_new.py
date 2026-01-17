@@ -460,10 +460,10 @@ def calculate_dynamic_price_spread(adx, current_price, default_spread, adx_thres
             ratio = (effective_adx - adx_threshold) / (adx_max - adx_threshold)  # ADX 25-60 映射到 0-1
             dynamic_spread = default_spread + ratio * (max_spread - default_spread)
             price_spread = int(min(dynamic_spread, max_spread))
-        print(f"DAYNAMIC price_spread: {price_spread} (默认: {default_spread}, 最大: {int(max_spread)})")
+        # print(f"DAYNAMIC price_spread: {price_spread} (默认: {default_spread}, 最大: {int(max_spread)})")
         return price_spread
     else:
-        print(f"ADX(5m): ADX NOT GET USE DEFAULT price_spread: {default_spread}")
+        # print(f"ADX(5m): ADX NOT GET USE DEFAULT price_spread: {default_spread}")
         return default_spread
 
 
@@ -504,8 +504,8 @@ def run_strategy_cycle(adapter):
         price_spread
     )
 
-    print(f"long_grid: {long_grid}")
-    print(f"short_grid: {short_grid}")
+    # print(f"long_grid: {long_grid}")
+    # print(f"short_grid: {short_grid}")
 
     # ========= 4. 查询当前挂单 =========
     (
@@ -515,8 +515,8 @@ def run_strategy_cycle(adapter):
         short_price_to_ids
     ) = get_pending_orders_arrays(adapter, SYMBOL)
 
-    print(f"current long_pending: {long_pending}")
-    print(f"current short_pending: {short_pending}")
+    # print(f"current long_pending: {long_pending}")
+    # print(f"current short_pending: {short_pending}")
 
     # ========= 5. Maker-only 撤单（极度保守） =========
     cancel_long, cancel_short = calculate_maker_cancel_orders(
@@ -548,8 +548,8 @@ def run_strategy_cycle(adapter):
     )
 
     if place_long or place_short:
-        print(f"下单做多数组: {place_long}")
-        print(f"下单做空数组: {place_short}")
+        # print(f"下单做多数组: {place_long}")
+        # print(f"下单做空数组: {place_short}")
         place_orders_by_prices(
             place_long,
             place_short,
