@@ -12,11 +12,8 @@ Write-Host "=== StandX Runner Started ===" -ForegroundColor Cyan
 Write-Host "Accounts arg: $ACCOUNTS"
 
 # ---------- 全局配置 ----------
-# 当前脚本所在目录（RunScripts）
-$SCRIPT_DIR = "D:\google_downloads_3\DD-STRATEGY-BOT-COPY-main\RunScripts"
-
 # 项目根目录
-$CODE_ROOT = Split-Path $SCRIPT_DIR -Parent
+$CODE_ROOT = "D:\google_downloads_3\DD-STRATEGY-BOT-COPY-main\DD-STRATEGY-BOT-COPY-main"
 
 if (-not $CODE_ROOT) {
     Write-Error "CODE_ROOT NULL"
