@@ -30,7 +30,8 @@ $CODE_ROOT = Split-Path $SCRIPT_DIR -Parent
 
 # 策略所在目录
 $PROC_DIR  = "$CODE_ROOT\strategys\strategy_standx"
-$PROC_SCRIPT = "$.\strategys\strategy_standx\standx_mm_new.py"
+$PROC_SCRIPT = "$PROC_DIR\standx_mm_new.py"
+
 
 $PROC_SCRIPT_decrypt = "$PROC_DIR\decrypt_keys.py"
 
