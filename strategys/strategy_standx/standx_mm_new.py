@@ -159,7 +159,6 @@ def get_pending_orders_arrays(adapter, symbol):
         # 如果适配器未实现，返回空数组
         return [], [], {}, {}
     except Exception as e:
-        print(f"获取未成交订单失败: {e}")
         return [], [], {}, {}
 
 
@@ -194,7 +193,6 @@ def cancel_stale_order_ids(adapter, symbol, stale_seconds=5, cancel_probability=
         
         # 如果有需要取消的订单，执行批量撤单
         if stale_order_ids:
-            print(f"随机取消未成交时间>{stale_seconds}秒的订单: {stale_order_ids} (概率: {cancel_probability*100}%)")
             try:
                 if hasattr(adapter, 'cancel_orders_by_ids'):
                     adapter.cancel_orders_by_ids(order_id_list=stale_order_ids)
@@ -271,9 +269,8 @@ def place_orders_by_prices(place_long, place_short, adapter, symbol, quantity):
                 time_in_force="gtc",
                 reduce_only=False
             )
-            print(f"[下单成功][多单] 价格={price}, 数量={quantity_decimal}, 订单ID={getattr(order, 'order_id', None)}")
         except Exception as e:
-            print(f"[下单失败][多单] 价格={price}, 数量={quantity_decimal}, 错误={e}")
+            pass
     
     # 做空订单：sell
     for price in place_short:
@@ -287,9 +284,8 @@ def place_orders_by_prices(place_long, place_short, adapter, symbol, quantity):
                 time_in_force="gtc",
                 reduce_only=False
             )
-            print(f"[下单成功][空单] 价格={price}, 数量={quantity_decimal}, 订单ID={getattr(order, 'order_id', None)}")
         except Exception as e:
-            print(f"[下单失败][空单] 价格={price}, 数量={quantity_decimal}, 错误={e}")
+            pass
 
 
 def calculate_cancel_orders(target_long, target_short, current_long, current_short):
@@ -464,10 +460,10 @@ def calculate_dynamic_price_spread(adx, current_price, default_spread, adx_thres
             ratio = (effective_adx - adx_threshold) / (adx_max - adx_threshold)  # ADX 25-60 映射到 0-1
             dynamic_spread = default_spread + ratio * (max_spread - default_spread)
             price_spread = int(min(dynamic_spread, max_spread))
-        print(f"动态 price_spread: {price_spread} (默认: {default_spread}, 最大: {int(max_spread)})")
+        print(f"DAYNAMIC price_spread: {price_spread} (默认: {default_spread}, 最大: {int(max_spread)})")
         return price_spread
     else:
-        print(f"ADX(5m): 获取失败，使用默认 price_spread: {default_spread}")
+        print(f"ADX(5m): ADX NOT GET USE DEFAULT price_spread: {default_spread}")
         return default_spread
 
 
@@ -508,8 +504,8 @@ def run_strategy_cycle(adapter):
         price_spread
     )
 
-    print(f"做多数组: {long_grid}")
-    print(f"做空数组: {short_grid}")
+    print(f"long_grid: {long_grid}")
+    print(f"short_grid: {short_grid}")
 
     # ========= 4. 查询当前挂单 =========
     (
@@ -519,8 +515,8 @@ def run_strategy_cycle(adapter):
         short_price_to_ids
     ) = get_pending_orders_arrays(adapter, SYMBOL)
 
-    print(f"当前做多数组: {long_pending}")
-    print(f"当前做空数组: {short_pending}")
+    print(f"current long_pending: {long_pending}")
+    print(f"current short_pending: {short_pending}")
 
     # ========= 5. Maker-only 撤单（极度保守） =========
     cancel_long, cancel_short = calculate_maker_cancel_orders(
@@ -532,8 +528,8 @@ def run_strategy_cycle(adapter):
     )
 
     if cancel_long or cancel_short:
-        print(f"撤单做多数组: {cancel_long}")
-        print(f"撤单做空数组: {cancel_short}")
+        print(f"cancel_long: {cancel_long}")
+        print(f"cancel_short: {cancel_short}")
         # 执行撤单
         cancel_orders_by_prices(
             cancel_long,
@@ -639,7 +635,11 @@ def main():
     parser.add_argument("--grid_count", type=int, default=5)
     parser.add_argument("--order_quantity", type=float, default=0.0001)
     parser.add_argument("--sleep_interval", type=int, default=5)
+    parser.add_argument("--account_id",type=str,required=False,help="Logical account identifier, e.g. account_hp17")
     args = parser.parse_args()
+
+    account_id = args.account_id or "UNKNOWN"
+    print(f"[BOOT] account_id={account_id}")
 
     # 加载配置文件
     try:
@@ -659,10 +659,10 @@ def main():
         initialize_config(config)
         
     except FileNotFoundError as e:
-        print(f"错误: {e}")
+        print(f"youryour error: {e}")
         sys.exit(1)
     except Exception as e:
-        print(f"加载配置文件失败: {e}")
+        print(f"whywhywhy load config file failed: {e}")
         sys.exit(1)
     
     try:
@@ -671,24 +671,20 @@ def main():
         
         sleep_interval = GRID_CONFIG.get('sleep_interval', 60)
         
-        print("策略开始运行，按 Ctrl+C 停止...")
-        print(f"休眠间隔: {sleep_interval} 秒\n")
-        
         while True:
             try:
                 run_strategy_cycle(adapter)
-                print(f"\n等待 {sleep_interval} 秒后继续...\n")
                 time.sleep(sleep_interval)
             except KeyboardInterrupt:
-                print("\n\n策略已停止")
+                print("\n\n weiweiwei the proc stop")
                 break
             except Exception as e:
-                print(f"策略循环错误: {e}")
-                print(f"等待 {sleep_interval} 秒后重试...\n")
+                print(f"weiweiwei proc cycle error: {e}")
+                print(f"wait {sleep_interval} second reload...\n")
                 time.sleep(sleep_interval)
         
     except Exception as e:
-        print(f"错误: {e}")
+        print(f"youryour error: {e}")
         return None
 
 
