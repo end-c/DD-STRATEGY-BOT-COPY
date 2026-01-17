@@ -1,3 +1,5 @@
+Write-Host "### SCRIPT LOADED FROM:" $MyInvocation.MyCommand.Path -ForegroundColor Yellow
+
 param(
     [Parameter(Mandatory=$true)]
     [string]$KEY_PREFIX,
