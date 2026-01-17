@@ -1,11 +1,8 @@
-Write-Host "### SCRIPT LOADED FROM:" $MyInvocation.MyCommand.Path -ForegroundColor Yellow
-
 param(
     [Parameter(Mandatory=$true)]
     [string]$KEY_PREFIX,
     [Parameter(Mandatory=$true)]
     [string]$ACCOUNTS   # 5-10 或 5,7,9
-    
 )
 
 [Console]::OutputEncoding = [Text.Encoding]::UTF8
