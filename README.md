@@ -174,7 +174,7 @@ conda install -c conda-forge ta-lib
 
 
 
-##请看自己
+##请看自己##
 **运行脚本前：**
 查看powershell运行状态 Unblock-File .\run_prod_new.ps1
 
