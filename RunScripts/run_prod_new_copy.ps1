@@ -1,11 +1,8 @@
-Write-Host "### SCRIPT LOADED FROM:" $MyInvocation.MyCommand.Path -ForegroundColor Yellow
-
 param(
     [Parameter(Mandatory=$true)]
     [string]$KEY_PREFIX,
     [Parameter(Mandatory=$true)]
-    [string]$ACCOUNTS   # 5-10 或 5,7,9
-    
+    [string]$ACCOUNTS
 )
 
 [Console]::OutputEncoding = [Text.Encoding]::UTF8
@@ -16,19 +13,15 @@ Write-Host "Accounts arg: $ACCOUNTS"
 
 # ---------- 全局配置 ----------
 # 当前脚本所在目录（RunScripts）
-if ($PSScriptRoot) {
-    $SCRIPT_DIR = $PSScriptRoot
-} else {
-    $SCRIPT_DIR = Split-Path -Parent $MyInvocation.MyCommand.Path
-}
-
-if (-not $SCRIPT_DIR) {
-    Write-Error "Cannot determine script directory"
-    exit 1
-}
+$SCRIPT_DIR = "D:\google_downloads_3\DD-STRATEGY-BOT-COPY-main\RunScripts"
 
 # 项目根目录
 $CODE_ROOT = Split-Path $SCRIPT_DIR -Parent
+
+if (-not $CODE_ROOT) {
+    Write-Error "CODE_ROOT NULL"
+    exit 1
+}
 
 # 策略所在目录
 $PROC_DIR  = "$CODE_ROOT\strategys\strategy_standx"

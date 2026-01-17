@@ -1,5 +1,5 @@
 # 当前脚本所在目录（RunScripts）
-$SCRIPT_DIR = $PSScriptRoot
+$SCRIPT_DIR = Get-Location
 
 # 项目根目录
 $CODE_ROOT = Split-Path $SCRIPT_DIR -Parent
@@ -16,6 +16,11 @@ $PYTHON    = "python"
 
 $MAX_RETRY = 3
 $RETRY_WAIT = 5
+
+if (-not $CODE_ROOT) {
+    Write-Error "CODE_ROOT NULL"
+    exit 1
+}
 
 Set-Location $CODE_ROOT
 
