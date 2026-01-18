@@ -486,7 +486,7 @@ def run_strategy_cycle(adapter):
         or price_info.get('last_price')
     )
 
-    print(f"[PRICE] {SYMBOL}: {last_price:.2f}")
+    # print(f"[PRICE] {SYMBOL}: {last_price:.2f}")
 
     # ========= 2. 计算 price_spread（保留你的 ADX 逻辑） =========
     default_spread = GRID_CONFIG['price_spread']
@@ -576,11 +576,11 @@ def run_strategy_cycle(adapter):
             position_age = now - POSITION_STATE["open_time"]
             exposure = abs(position.size)
 
-            print(
-                f"[HOLDING] size={position.size}, "
-                f"age={int(position_age)}s, "
-                f"trend={trend_state}"
-            )
+            # print(
+            #     f"[HOLDING] size={position.size}, "
+            #     f"age={int(position_age)}s, "
+            #     f"trend={trend_state}"
+            # )
 
             # --- 优先级 1：规模失控 ---
             if exposure > MAX_POSITION_SIZE:
@@ -652,7 +652,7 @@ def main():
 
     # 加载配置文件
     try:
-        print(f"加载配置文件: {args.config}")
+        # print(f"加载配置文件: {args.config}")
         
         config = load_config(args.config)
         # 在这里覆盖
@@ -677,6 +677,8 @@ def main():
     try:
         adapter = create_adapter(STANDX_CONFIG)
         adapter.connect()
+        
+        print("begin begin la~~~~~~~~~~~~~")
         
         sleep_interval = GRID_CONFIG.get('sleep_interval', 60)
         

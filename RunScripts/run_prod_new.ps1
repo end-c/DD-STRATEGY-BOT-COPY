@@ -97,7 +97,7 @@ foreach ($accountId in $ACCOUNT_SET) {
 
     $VENV = "$VENV_ROOT\venv_$accountId"
     $LOG  = "$LOG_DIR\$accountId.log"
-    $PID_FILE  = "$LOG_DIR\$accountId.PID"
+    $PID_FILE  = "$LOG_DIR\$accountId.pid"
 
     Log "===== START account=$accountId =====" $LOG
 

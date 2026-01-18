@@ -1,12 +1,3 @@
-# Get-ChildItem logs\*.pid | ForEach-Object {
-#     $pid = Get-Content $_
-#     if (Get-Process -Id $pid -ErrorAction SilentlyContinue) {
-#         Stop-Process -Id $pid -Force
-#         Write-Host "Killed PID $pid"
-#     }
-# }
-
-
 # ==============================
 # stop.ps1 - stop all strategy processes
 # ==============================
@@ -42,15 +33,15 @@ if (!$pidFiles) {
 }
 
 foreach ($file in $pidFiles) {
-    $pid = Get-Content $file | Select-Object -First 1
+    $procPid = Get-Content $file | Select-Object -First 1
 
-    if ($pid -match '^\d+$') {
-        $proc = Get-Process -Id $pid -ErrorAction SilentlyContinue
+    if ($procPid -match '^\d+$') {
+        $proc = Get-Process -Id $procPid -ErrorAction SilentlyContinue
         if ($proc) {
-            Stop-Process -Id $pid -Force
-            Write-Host "Killed PID $pid ($($file.Name))" -ForegroundColor Green
+            Stop-Process -Id $procPid -Force
+            Write-Host "Killed PID $procPid ($($file.Name))" -ForegroundColor Green
         } else {
-            Write-Host "PID $pid not running ($($file.Name))" -ForegroundColor DarkGray
+            Write-Host "PID $procPid not running ($($file.Name))" -ForegroundColor DarkGray
         }
     }
 
@@ -63,14 +54,7 @@ Write-Host "=== STOP DONE ===" -ForegroundColor Cyan
 
 
 
-# $proc = Start-Process `
-#     -FilePath $PYTHON_EXE `
-#     -ArgumentList "`"$PROC_SCRIPT`" --private_key $private_key --account_id $accountId" `
-#     -WorkingDirectory $CODE_ROOT `
-#     -NoNewWindow `
-#     -PassThru
 
-# $proc.Id | Out-File "$LOG_DIR\$accountId.pid" -Encoding ascii
 
 
 
