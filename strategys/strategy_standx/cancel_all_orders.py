@@ -2,13 +2,16 @@
 """
 StandX 批量撤单脚本（生产版）
 """
-
 import sys
+import os
+import yaml
 import argparse
-from decimal import Decimal
+
+current_dir = os.path.dirname(os.path.abspath(__file__))
+project_root = os.path.dirname(os.path.dirname(current_dir))
+sys.path.insert(0, project_root)
 
 from adapters import create_adapter
-
 
 STANDX_CANCEL_CONFIG = None
 SYMBOL = None
@@ -57,7 +60,8 @@ def main():
     try:      
         config = load_config(args.config)
         # 在这里覆盖
-        config["exchange"]["private_key"] = args.private_key      
+        config["exchange"]["private_key"] = args.private_key
+        global STANDX_CANCEL_CONFIG, SYMBOL      
         STANDX_CANCEL_CONFIG = config["exchange"]
         SYMBOL = config["symbol"]
     except FileNotFoundError as e:

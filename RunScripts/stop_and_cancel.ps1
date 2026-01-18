@@ -98,8 +98,7 @@ foreach ($accountId in $ACCOUNT_SET) {
             Write-Host "Cancel orders..."
             & $PY_EXE $CANCEL_SCRIPT `
                 --private_key $private_key `
-                --account_id  $accountId `
-                *> $null
+                --account_id  $accountId
         } else {
             Write-Host "cancel skipped (python not found)" -ForegroundColor Yellow
         }
