@@ -97,6 +97,7 @@ foreach ($accountId in $ACCOUNT_SET) {
 
     $VENV = "$VENV_ROOT\venv_$accountId"
     $LOG  = "$LOG_DIR\$accountId.log"
+    $PID_FILE  = "$LOG_DIR\$accountId.PID"
 
     Log "===== START account=$accountId =====" $LOG
 
@@ -145,9 +146,16 @@ foreach ($accountId in $ACCOUNT_SET) {
             -ArgumentList "`"$PROC_SCRIPT`" --private_key $private_key --account_id $accountId" `
             -WorkingDirectory $CODE_ROOT `
             -NoNewWindow `
+            -RedirectStandardOutput $LOG `
+            -RedirectStandardError $LOG `
             -PassThru
 
-        $proc.Id | Out-File "$LOG_DIR\$accountId.pid" -Encoding ascii
+        if ($proc -and $proc.Id) {
+            $proc.Id | Out-File $PID_FILE -Encoding ascii -Force
+            Write-Host "Started $accountId (PID=$($proc.Id))"
+        } else {
+            Write-Error "Failed to start process for $accountId"
+        }
 
     } finally {
         Remove-Variable private_key -ErrorAction SilentlyContinue
