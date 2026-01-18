@@ -13,15 +13,29 @@ from adapters import create_adapter
 STANDX_CANCEL_CONFIG = None
 SYMBOL = None
 
-def initialize_config(config):
-    """初始化全局配置变量"""
-    global STANDX_CONFIG, SYMBOL, GRID_CONFIG, RISK_CONFIG, CANCEL_STALE_ORDERS_CONFIG
-
-    STANDX_CONFIG = config['exchange']
-    SYMBOL = config['symbol']
-    GRID_CONFIG = config['grid']
-    RISK_CONFIG = config.get('risk', {})
-    CANCEL_STALE_ORDERS_CONFIG = config.get('cancel_stale_orders', {})
+def load_config(config_file="config.yaml"):
+    """
+    加载配置文件
+    
+    Args:
+        config_file: 配置文件路径，可以是相对路径或绝对路径
+    
+    Returns:
+        dict: 配置字典
+    """
+    # 如果是相对路径，相对于脚本目录
+    if not os.path.isabs(config_file):
+        config_path = os.path.join(current_dir, config_file)
+    else:
+        config_path = config_file
+    
+    if not os.path.exists(config_path):
+        raise FileNotFoundError(f"配置文件不存在: {config_path}")
+    
+    with open(config_path, 'r', encoding='utf-8') as f:
+        config = yaml.safe_load(f)
+    
+    return config
 
 def main():
     # 解析命令行参数
@@ -37,14 +51,15 @@ def main():
     args = parser.parse_args()
 
     account_id = args.account_id or "UNKNOWN"
-    print(f"[BOOT] account_id={account_id}")
+    print(f"[BOOT] cancel account={args.account_id}")
 
     # 加载配置文件
     try:      
         config = load_config(args.config)
         # 在这里覆盖
         config["exchange"]["private_key"] = args.private_key      
-        initialize_config(config)
+        STANDX_CANCEL_CONFIG = config["exchange"]
+        SYMBOL = config["symbol"]
     except FileNotFoundError as e:
         print(f"youryour error: {e}")
         sys.exit(1)
@@ -56,14 +71,16 @@ def main():
     adapter.connect()
 
     # 2. 查询 open orders（仅用于日志）
-    open_orders = adapter.get_open_orders(symbol=args.symbol)
+    open_orders = adapter.get_open_orders(symbol=SYMBOL)
 
     if not open_orders:
-        print(f"[{args.account}] no open orders")
+        print(f"[CANCEL] no open orders for {SYMBOL}")
         return
+    print(f"[CANCEL] found {len(open_orders)} open orders")
+
     # 3. 执行撤单
-    adapter.cancel_all_orders(symbol=args.symbol)
-    print(f"[{args.account}] cancel_all_orders done")
+    adapter.cancel_all_orders(symbol=SYMBOL)
+    print(f"[CANCEL] cancel_all_orders done ({len(open_orders)} orders)")
 
 
 if __name__ == "__main__":
@@ -72,3 +89,4 @@ if __name__ == "__main__":
     except Exception as e:
         print(f"[ERROR] {e}")
         sys.exit(1)
+

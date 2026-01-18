@@ -79,18 +79,7 @@ foreach ($accountId in $ACCOUNT_SET) {
             continue
         }
 
-        # ---- 撤单（吞掉所有输出）----
-        if ((Test-Path $PY_EXE) -and (Test-Path $CANCEL_SCRIPT)) {
-            Write-Host "Cancel orders..."
-            & $PY_EXE $CANCEL_SCRIPT `
-                --private_key $private_key `
-                --account_id  $accountId `
-                *> $null
-        } else {
-            Write-Host "cancel skipped (python not found)" -ForegroundColor Yellow
-        }
-
-        # ---- Kill 策略进程 ----
+        # ---- 先Kill 策略进程 ----
         if (Test-Path $PID_FILE) {
             $procId = Get-Content $PID_FILE
             if ($procId -and (Get-Process -Id $procId -ErrorAction SilentlyContinue)) {
@@ -100,6 +89,19 @@ foreach ($accountId in $ACCOUNT_SET) {
             Remove-Item $PID_FILE -Force -ErrorAction SilentlyContinue
         } else {
             Write-Host "PID file not found"
+        }
+
+        Start-Sleep -Seconds 2
+
+        # ---- 再撤单（吞掉所有输出）----
+        if ((Test-Path $PY_EXE) -and (Test-Path $CANCEL_SCRIPT)) {
+            Write-Host "Cancel orders..."
+            & $PY_EXE $CANCEL_SCRIPT `
+                --private_key $private_key `
+                --account_id  $accountId `
+                *> $null
+        } else {
+            Write-Host "cancel skipped (python not found)" -ForegroundColor Yellow
         }
 
     } finally {
