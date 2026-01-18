@@ -208,6 +208,7 @@ pip install web3>=6.0.0 eth-account>=0.8.0 cryptography>=41.0.0
 ## 停止进程
 也可以直接
 taskkill /F /IM python.exe
+tasklist | findstr python
 
 ## 终止进程并撤掉所有订单
 
@@ -223,3 +224,9 @@ stop_and_cancel.ps1用法：
 
 # 停 所有账户
 .\stop_and_cancel.ps1
+
+## 查看状态：
+.\status.ps1 account_hp
+.\status.ps1 account_hp 12-14
+.\status.ps1 account_hp 12-14 -Watch 3 ：每 3 秒刷新一次，Ctrl+C 退出
+
