@@ -75,19 +75,19 @@ foreach ($accountId in $ACCOUNT_SET) {
             $PASSWORD $KEY_PREFIX $index
 
         if ($LASTEXITCODE -ne 0 -or !$private_key) {
-            Write-Host "❌ decrypt failed" -ForegroundColor Red
+            Write-Host "decrypt failed" -ForegroundColor Red
             continue
         }
 
         # ---- 撤单（吞掉所有输出）----
-        if (Test-Path $PY_EXE -and (Test-Path $CANCEL_SCRIPT)) {
+        if ((Test-Path $PY_EXE) -and (Test-Path $CANCEL_SCRIPT)) {
             Write-Host "Cancel orders..."
             & $PY_EXE $CANCEL_SCRIPT `
                 --private_key $private_key `
                 --account_id  $accountId `
                 *> $null
         } else {
-            Write-Host "⚠ cancel skipped (python not found)" -ForegroundColor Yellow
+            Write-Host "cancel skipped (python not found)" -ForegroundColor Yellow
         }
 
         # ---- Kill 策略进程 ----

@@ -144,8 +144,6 @@ foreach ($accountId in $ACCOUNT_SET) {
             -ArgumentList "`"$PROC_SCRIPT`" --private_key $private_key --account_id $accountId" `
             -WorkingDirectory $CODE_ROOT `
             -NoNewWindow `
-            -RedirectStandardOutput $LOG `
-            -RedirectStandardError $LOG `
             -PassThru
 
         if ($proc -and $proc.Id) {
