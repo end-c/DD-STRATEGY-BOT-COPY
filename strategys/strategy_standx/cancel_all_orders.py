@@ -43,7 +43,7 @@ def load_config(config_file="config.yaml"):
     
     return config
 
-def close_position_if_exists(adapter, symbol,account_id):
+def close_position_if_exists(adapter, symbol, account_id):
     """检查持仓，如果有持仓则市价平仓
     
     注意: StandX 适配器的持仓查询接口可能未实现，此功能可能无法使用
@@ -110,7 +110,7 @@ def main():
     print(f"[CANCEL] cancel_all_orders done ({len(open_orders)} orders)")
 
     # 检查持仓，如果有持仓则市价平仓
-    close_position_if_exists(adapter, SYMBOL,args.account)
+    close_position_if_exists(adapter, SYMBOL,args.account_id)
 
 if __name__ == "__main__":
     try:
