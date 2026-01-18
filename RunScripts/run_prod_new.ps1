@@ -134,11 +134,20 @@ foreach ($accountId in $ACCOUNT_SET) {
             continue
         }
 
-        Start-Process `
+        # Start-Process `
+        #     -FilePath $PYTHON_EXE `
+        #     -ArgumentList "`"$PROC_SCRIPT`" --private_key $private_key --account_id $accountId" `
+        #     -WorkingDirectory $CODE_ROOT `
+        #     -NoNewWindow
+
+        $proc = Start-Process `
             -FilePath $PYTHON_EXE `
             -ArgumentList "`"$PROC_SCRIPT`" --private_key $private_key --account_id $accountId" `
             -WorkingDirectory $CODE_ROOT `
-            -NoNewWindow
+            -NoNewWindow `
+            -PassThru
+
+        $proc.Id | Out-File "$LOG_DIR\$accountId.pid" -Encoding ascii
 
     } finally {
         Remove-Variable private_key -ErrorAction SilentlyContinue
@@ -147,3 +156,4 @@ foreach ($accountId in $ACCOUNT_SET) {
 }
 
 Remove-Variable PASSWORD -ErrorAction SilentlyContinue
+

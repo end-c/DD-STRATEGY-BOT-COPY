@@ -9,6 +9,7 @@ import time
 import random
 import argparse
 from decimal import Decimal
+import logging
 
 current_dir = os.path.dirname(os.path.abspath(__file__))
 project_root = os.path.dirname(os.path.dirname(current_dir))
@@ -23,6 +24,7 @@ SYMBOL = None
 GRID_CONFIG = None
 RISK_CONFIG = None
 CANCEL_STALE_ORDERS_CONFIG = None
+account_id = None
 
 # 来源chatgpt对话
 POSITION_STATE = {
@@ -379,12 +381,15 @@ def place_maker_close_orders(
             time_in_force="gtc",
             reduce_only=True
         )
-        print(
-            f"[MAKER-CLOSE] side={close_side}, "
-            f"price={int(close_price)}, size={close_size}"
+        logging.info(
+            "[MAKER-CLOSE] side=%s, price=%d, size=%s",
+            close_side,
+            int(close_price),
+            close_size
         )
     except Exception as e:
-        print(f"[MAKER-CLOSE][FAIL] {e}")
+        # print(f"[MAKER-CLOSE][FAIL] {e}")
+        pass
 
 
 def calculate_place_orders(target_long, target_short, current_long, current_short):
@@ -424,9 +429,9 @@ def close_position_if_exists(adapter, symbol):
     try:
         position = adapter.get_position(symbol)
         if position and position.size != Decimal("0"):
-            print(f"检测到持仓: {position.size} {position.side}, 市价平仓中...")
+            # print(f"检测到持仓: {position.size} {position.side}, 市价平仓中...")
             adapter.close_position(symbol, order_type="market")
-            print("平仓完成")
+            # print("平仓完成")
         # 如果 position 为 None，说明 StandX 适配器的持仓查询接口可能未实现
     except Exception as e:
         # 如果持仓查询失败，静默处理（StandX 可能没有持仓查询接口）
@@ -449,7 +454,7 @@ def calculate_dynamic_price_spread(adx, current_price, default_spread, adx_thres
     max_spread = current_price * 0.01  # 最大为价格的1%
     
     if adx is not None:
-        print(f"ADX(5m): {adx:.2f}")
+        # print(f"ADX(5m): {adx:.2f}")
         # ADX <= threshold 时使用默认值
         if adx <= adx_threshold:
             price_spread = default_spread
@@ -528,8 +533,8 @@ def run_strategy_cycle(adapter):
     )
 
     if cancel_long or cancel_short:
-        print(f"cancel_long: {cancel_long}")
-        print(f"cancel_short: {cancel_short}")
+        # print(f"cancel_long: {cancel_long}")
+        # print(f"cancel_short: {cancel_short}")
         # 执行撤单
         cancel_orders_by_prices(
             cancel_long,
@@ -640,6 +645,10 @@ def main():
 
     account_id = args.account_id or "UNKNOWN"
     print(f"[BOOT] account_id={account_id}")
+    logging.basicConfig(
+        filename=f"logs/{account_id}.log",
+        level=logging.INFO,
+        format="%(asctime)s | %(levelname)s | %(message)s")
 
     # 加载配置文件
     try:

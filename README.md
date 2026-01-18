@@ -199,3 +199,27 @@ pip install web3>=6.0.0 eth-account>=0.8.0 cryptography>=41.0.0
 **第三步**
 .\RunScripts\run_prod_new.ps1 -ACCOUNTS xx-xx -KEY_PREFIX account_xx
 或者.\RunScripts\run_prod_new.ps1 -ACCOUNTS "15,16-17" -KEY_PREFIX "account_hp"
+
+
+
+## 终止进程
+.\stop.ps1
+
+## 停止进程
+也可以直接
+taskkill /F /IM python.exe
+
+## 终止进程并撤掉所有订单
+
+stop_and_cancel.ps1用法：
+# 停 account_hp12
+.\stop_and_cancel.ps1 -KEY_PREFIX account_hp -ACCOUNTS 12
+
+# 停 account_hp12 ~ 14
+.\stop_and_cancel.ps1 -KEY_PREFIX account_hp -ACCOUNTS 12-14
+
+# 停 account_hp 全部
+.\stop_and_cancel.ps1 -KEY_PREFIX account_hp
+
+# 停 所有账户
+.\stop_and_cancel.ps1
