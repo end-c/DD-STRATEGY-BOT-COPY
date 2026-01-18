@@ -40,6 +40,26 @@ def load_config(config_file="config.yaml"):
     
     return config
 
+def close_position_if_exists(adapter, symbol,account_id):
+    """检查持仓，如果有持仓则市价平仓
+    
+    注意: StandX 适配器的持仓查询接口可能未实现，此功能可能无法使用
+    
+    Args:
+        adapter: 适配器实例
+        symbol: 交易对符号
+    """
+    try:
+        position = adapter.get_position(symbol)
+        if position and position.size != Decimal("0"):
+            print(f"detect position: {position.size} {position.side}")
+            adapter.close_position(symbol, order_type="market")
+            print("close position")
+        # 如果 position 为 None，说明 StandX 适配器的持仓查询接口可能未实现
+    except Exception as e:
+        # 如果持仓查询失败，静默处理（StandX 可能没有持仓查询接口）
+        raise Exception(f"account:{account_id} close position failure")
+    
 def main():
     # 解析命令行参数
     parser = argparse.ArgumentParser(description='StandX 策略脚本')
@@ -86,6 +106,8 @@ def main():
     adapter.cancel_all_orders(symbol=SYMBOL)
     print(f"[CANCEL] cancel_all_orders done ({len(open_orders)} orders)")
 
+    # 检查持仓，如果有持仓则市价平仓
+    close_position_if_exists(adapter, SYMBOL,args.account)
 
 if __name__ == "__main__":
     try:
