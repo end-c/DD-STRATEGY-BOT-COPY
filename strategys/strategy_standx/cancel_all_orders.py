@@ -52,6 +52,7 @@ def close_position_if_exists(adapter, symbol, account_id):
         adapter: 适配器实例
         symbol: 交易对符号
     """
+    print('looking for position')
     try:
         position = adapter.get_position(symbol)
         if position and position.size != Decimal("0"):
@@ -100,14 +101,26 @@ def main():
     # 2. 查询 open orders（仅用于日志）
     open_orders = adapter.get_open_orders(symbol=SYMBOL)
 
-    if not open_orders:
-        print(f"[CANCEL] no open orders for {SYMBOL}")
-        return
-    print(f"[CANCEL] found {len(open_orders)} open orders")
+    # if not open_orders:
+    #     print(f"[CANCEL] no open orders for {SYMBOL}")
+    #     return
+    # print(f"[CANCEL] found {len(open_orders)} open orders")
 
-    # 3. 执行撤单
-    adapter.cancel_all_orders(symbol=SYMBOL)
-    print(f"[CANCEL] cancel_all_orders done ({len(open_orders)} orders)")
+    # # 3. 执行撤单
+    # adapter.cancel_all_orders(symbol=SYMBOL)
+    # print(f"[CANCEL] cancel_all_orders done ({len(open_orders)} orders)")
+
+    # # 检查持仓，如果有持仓则市价平仓
+    # close_position_if_exists(adapter, SYMBOL,args.account_id)
+
+    if open_orders:
+        # 3. 执行撤单
+        adapter.cancel_all_orders(symbol=SYMBOL)
+        
+        print(f"[CANCEL] found {len(open_orders)} open orders")
+        print(f"[CANCEL] cancel_all_orders done ({len(open_orders)} orders)")
+    else:
+        print(f"[CANCEL] no open orders for {SYMBOL}")
 
     # 检查持仓，如果有持仓则市价平仓
     close_position_if_exists(adapter, SYMBOL,args.account_id)
