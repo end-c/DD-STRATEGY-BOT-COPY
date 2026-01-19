@@ -53,13 +53,8 @@ Write-Host "=== STOP DONE ===" -ForegroundColor Cyan
 
 
 
-
-
-
-
-
-
-        # taskkill /F /IM python.exe
-        # taskkill /F /FI "WINDOWTITLE eq standx_mm_new.py*"
-        # 确保没有残留 
-        # tasklist | findstr python
+# 系统层面
+# taskkill /F /IM python.exe
+# taskkill /F /FI "WINDOWTITLE eq standx_mm_new.py*"
+# 确保没有残留 
+# tasklist | findstr python

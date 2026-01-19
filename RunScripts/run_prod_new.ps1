@@ -133,12 +133,6 @@ foreach ($accountId in $ACCOUNT_SET) {
             continue
         }
 
-        # Start-Process `
-        #     -FilePath $PYTHON_EXE `
-        #     -ArgumentList "`"$PROC_SCRIPT`" --private_key $private_key --account_id $accountId" `
-        #     -WorkingDirectory $CODE_ROOT `
-        #     -NoNewWindow
-
         $proc = Start-Process `
             -FilePath $PYTHON_EXE `
             -ArgumentList "`"$PROC_SCRIPT`" --private_key $private_key --account_id $accountId" `

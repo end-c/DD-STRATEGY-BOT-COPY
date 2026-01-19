@@ -501,6 +501,13 @@ def run_strategy_cycle(adapter):
     else:
         price_spread = default_spread
 
+    logging.info(
+        "[PRICE] price_spread=%d, last_price=%.2f, symbol=%s",
+        int(price_spread),
+        float(last_price),
+        SYMBOL
+    )
+
     # ========= 3. 生成 Maker-friendly 网格 =========
     long_grid, short_grid = generate_grid_arrays(
         last_price,
