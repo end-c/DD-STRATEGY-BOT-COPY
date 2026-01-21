@@ -171,6 +171,8 @@ conda install -c conda-forge ta-lib
 **原作者**
 来源于该项目：https://github.com/Dazmon88/DD-strategy-bot
 
+var:
+https://github.com/Dazmon00/var-lighter-auto-tool
 
 
 
