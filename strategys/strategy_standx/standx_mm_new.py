@@ -31,6 +31,9 @@ POSITION_STATE = {
     "open_time": None,
     "last_reduce_time": None
 }
+MAX_POSITION_SIZE = Decimal("0.0002")
+MAX_POSITION_AGE  = 300
+REDUCE_INTERVAL   = 60
 
 
 def load_config(config_file="config.yaml"):
