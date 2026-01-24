@@ -121,8 +121,17 @@ foreach ($accountId in $ACCOUNT_SET) {
 
         if ($snapshot) {
             $data   = $snapshot | ConvertFrom-Json
-            $orders = [int]$data.open_orders
+            # $orders = [int]$data.open_orders
+            $orders = 0
+            if ($data.open_orders) {
+                $orders = @($data.open_orders).Count
+            }
+            # $posTxt = $data.position_summary
             $posTxt = $data.position_summary
+            if (-not $posTxt) {
+                $posTxt = "flat"
+            }
+
             $snapshotOK = $true
         }
     }
@@ -165,7 +174,7 @@ foreach ($accountId in $ACCOUNT_SET) {
 
     # ---------- PANIC ----------
     if ($status -eq "STALLED") {
-        Write-Host "PANIC → $accountId" -ForegroundColor Red
+        Write-Host "PANIC : $accountId" -ForegroundColor Red
 
         $ts = Get-Date -Format "yyyyMMdd_HHmmss"
         & $PYTHON $SNAPSHOT_PY `
