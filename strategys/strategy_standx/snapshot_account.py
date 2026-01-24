@@ -102,7 +102,7 @@ def main():
                     "leverage": p.leverage,
                     "margin_mode": p.margin_mode,
                 })
-                summary.append(f"{p.side}:{p.size}")
+                summary.append(f"{p.side}:{p.size}:{p.unrealized_pnl}")
             snapshot["position_summary"] = ",".join(summary)
         else:
             snapshot["position_summary"] = "FLAT"

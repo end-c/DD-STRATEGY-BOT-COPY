@@ -22,10 +22,10 @@ $PROC_DIR   = "$CODE_ROOT\strategys\strategy_standx"
 $LOG_DIR    = "$CODE_ROOT\logs"
 $SNAP_DIR   = "$CODE_ROOT\snapshots"
 
-$PYTHON     = "python"
-$DECRYPT    = "$PROC_DIR\decrypt_keys.py"
-$CANCEL_PY  = "$PROC_DIR\cancel_all_orders.py"
-$SNAPSHOT_PY= "$PROC_DIR\snapshot_account.py"
+$PYTHON      = "python"
+$DECRYPT     = "$PROC_DIR\decrypt_keys.py"
+$CANCEL_PY   = "$PROC_DIR\cancel_all_orders.py"
+$SNAPSHOT_PY = "$PROC_DIR\snapshot_account.py"
 
 New-Item $SNAP_DIR -ItemType Directory -Force | Out-Null
 
@@ -73,20 +73,20 @@ $PASSWORD = [Runtime.InteropServices.Marshal]::PtrToStringAuto(
 $ACCOUNT_SET = Parse-Accounts $KEY_PREFIX $ACCOUNTS
 
 # ---------- 表头 ----------
-"{0,-16} {1,-9} {2,-6} {3,-10} {4,-10} {5}" -f `
+"{0,-16} {1,-9} {2,-6} {3,-10} {4,-14} {5}" -f `
     "ACCOUNT","STATUS","PID","ORDERS","POSITION","NOTE"
-Write-Host ("-" * 90)
+Write-Host ("-" * 95)
 
 foreach ($accountId in $ACCOUNT_SET) {
 
     $PID_FILE = "$LOG_DIR\$accountId.pid"
     $LOG_FILE = "$LOG_DIR\$accountId.log"
 
-    $status = "DEAD"
+    $status = "UNKNOWN"
     $note   = "-"
     $pidTxt = "-"
-    $orders = "-"
-    $posTxt = "-"
+    $orders = "ERR"
+    $posTxt = "ERR"
 
     # ---------- 进程 ----------
     $procAlive = $false
@@ -98,23 +98,18 @@ foreach ($accountId in $ACCOUNT_SET) {
         }
     }
 
-    if (!$procAlive) {
-        "{0,-16} {1,-9} {2,-6} {3,-10} {4,-10} {5}" -f `
-            $accountId,"DEAD",$pidTxt,$orders,$posTxt,"process gone"
-        continue
-    }
-
     # ---------- 日志活跃度 ----------
+    $stallByLog = $false
     $lastLog = Read-LastLogTime $LOG_FILE
-    $stall = $false
     if ($lastLog) {
         $delta = (New-TimeSpan -Start $lastLog -End (Get-Date)).TotalSeconds
         if ($delta -gt $STALL_SECONDS) {
-            $stall = $true
+            $stallByLog = $true
         }
     }
 
-    # ---------- 查询账户状态（orders + positions） ----------
+    # ---------- 查询交易所状态（无论本地是否存活） ----------
+    $snapshotOK = $false
     try {
         $index = ($accountId -replace ".*?(\d+)$",'$1')
         $private_key = & $PYTHON $DECRYPT $PASSWORD $KEY_PREFIX $index
@@ -124,34 +119,47 @@ foreach ($accountId in $ACCOUNT_SET) {
             --account_id  $accountId `
             2>$null
 
-        $data = $snapshot | ConvertFrom-Json
-        $orders = $data.open_orders
-        $posTxt = $data.position_summary
-
-    } catch {
-        $status = "ERROR"
-        $note = "query failed"
+        if ($snapshot) {
+            $data   = $snapshot | ConvertFrom-Json
+            $orders = [int]$data.open_orders
+            $posTxt = $data.position_summary
+            $snapshotOK = $true
+        }
+    }
+    catch {
+        $orders = "ERR"
+        $posTxt = "ERR"
     }
 
-    # ---------- STALLED 判定 ----------
+    # ---------- STALLED（订单冻结）判定 ----------
+    $stallByOrders = $false
     $state = Load-State $accountId
     $now = [int][double]::Parse((Get-Date -UFormat %s))
 
-    if ($state.last_orders -eq $orders) {
-        if (($now - $state.last_change) -gt $ORDER_STABLE_SECONDS) {
-            $stall = $true
+    if ($orders -is [int]) {
+        if ($state.last_orders -eq $orders) {
+            if (($now - $state.last_change) -gt $ORDER_STABLE_SECONDS) {
+                $stallByOrders = $true
+            }
+        } else {
+            $state.last_orders = $orders
+            $state.last_change = $now
         }
-    } else {
-        $state.last_orders = $orders
-        $state.last_change = $now
+        Save-State $accountId $state
     }
 
-    Save-State $accountId $state
+    $stall = $stallByLog -and $stallByOrders
 
-    if ($stall) {
+    # ---------- 状态判定 ----------
+    if (!$procAlive) {
+        $status = "DEAD"
+        $note   = "process gone"
+    }
+    elseif ($stall) {
         $status = "STALLED"
-        $note = "orders not moving"
-    } else {
+        $note   = "orders frozen"
+    }
+    else {
         $status = "RUNNING"
     }
 
@@ -174,7 +182,7 @@ foreach ($accountId in $ACCOUNT_SET) {
         Remove-Item $PID_FILE -ErrorAction SilentlyContinue
     }
 
-    "{0,-16} {1,-9} {2,-6} {3,-10} {4,-10} {5}" -f `
+    "{0,-16} {1,-9} {2,-6} {3,-10} {4,-14} {5}" -f `
         $accountId,$status,$pidTxt,$orders,$posTxt,$note
 }
 
