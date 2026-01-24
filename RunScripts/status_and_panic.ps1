@@ -91,10 +91,10 @@ foreach ($accountId in $ACCOUNT_SET) {
     # ---------- 进程 ----------
     $procAlive = $false
     if (Test-Path $PID_FILE) {
-        $pid = Get-Content $PID_FILE -ErrorAction SilentlyContinue
-        if ($pid -and (Get-Process -Id $pid -ErrorAction SilentlyContinue)) {
+        $procPid = Get-Content $PID_FILE -ErrorAction SilentlyContinue
+        if ($procPid -and (Get-Process -Id $procPid -ErrorAction SilentlyContinue)) {
             $procAlive = $true
-            $pidTxt = $pid
+            $pidTxt = $procPid
         }
     }
 
@@ -170,7 +170,7 @@ foreach ($accountId in $ACCOUNT_SET) {
             --account_id $accountId `
             *> $null
 
-        Stop-Process -Id $pid -Force -ErrorAction SilentlyContinue
+        Stop-Process -Id $procPid -Force -ErrorAction SilentlyContinue
         Remove-Item $PID_FILE -ErrorAction SilentlyContinue
     }
 
