@@ -73,6 +73,9 @@ $PASSWORD = [Runtime.InteropServices.Marshal]::PtrToStringAuto(
 $ACCOUNT_SET = Parse-Accounts $KEY_PREFIX $ACCOUNTS
 
 # ---------- 表头 ----------
+Write-Host "=== StandX STATUS + PANIC PANEL ===" -ForegroundColor Cyan
+Write-Host ""
+
 "{0,-16} {1,-9} {2,-6} {3,-10} {4,-28} {5}" -f `  # 增加 posTxt 宽度为 -28
     "ACCOUNT","STATUS","PID","ORDERS","POSITION","NOTE"
 Write-Host ("-" * 95)
@@ -82,6 +85,11 @@ function Monitor-Accounts {
 
     # 清空上次的终端输出
     Clear-Host
+
+    # ---------- 表头 ----------
+    "{0,-16} {1,-9} {2,-6} {3,-10} {4,-28} {5}" -f `  # 增加 posTxt 宽度为 -28
+        "ACCOUNT","STATUS","PID","ORDERS","POSITION","NOTE"
+    Write-Host ("-" * 95)
 
     foreach ($accountId in $ACCOUNT_SET) {
 
