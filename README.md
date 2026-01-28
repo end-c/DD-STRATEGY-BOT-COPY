@@ -241,6 +241,8 @@ strategy_standx目录下:snapshot_account.py、cancel_all_orders.py
 status_and_positions.ps1
 
 新增脚本 macos
+brew install jq
+
 status_and_positions.sh
 chmod +x status_and_positions.sh
 ./status_and_positions.sh -KEY_PREFIX account_mac -ACCOUNTS 1-19 [INTERVAL] 300 // 300s刷新一次
