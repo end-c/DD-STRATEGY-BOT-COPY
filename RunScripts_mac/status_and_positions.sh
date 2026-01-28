@@ -1,22 +1,19 @@
-#!/bin/bash
+#!/usr/bin/env bash
+set -euo pipefail
 
-# 读取输入参数
-while getopts "k:a:s:t:i:" opt; do
-  case $opt in
-    k) KEY_PREFIX=$OPTARG ;;
-    a) ACCOUNTS=$OPTARG ;;
-    s) STALL_SECONDS=$OPTARG ;;
-    t) ORDER_STABLE_SECONDS=$OPTARG ;;
-    i) INTERVAL=$OPTARG ;;
-    *) echo "Usage: $0 [-k KEY_PREFIX] [-a ACCOUNTS] [-s STALL_SECONDS] [-t ORDER_STABLE_SECONDS] [-i INTERVAL]"
-       exit 1 ;;
-  esac
-done
+# 参数部分
+KEY_PREFIX="${1:-}"
+ACCOUNTS="${2:-}"
+STALL_SECONDS="${3:-180}"
+ORDER_STABLE_SECONDS="${4:-180}"
+INTERVAL="${5:-0}"
 
-# 默认参数
-STALL_SECONDS=${STALL_SECONDS:-180}
-ORDER_STABLE_SECONDS=${ORDER_STABLE_SECONDS:-180}
-INTERVAL=${INTERVAL:-0} # 0为执行一次，非零为间隔秒数
+# 检查必需的参数是否提供
+if [ -z "$KEY_PREFIX" ] || [ -z "$ACCOUNTS" ]; then
+    echo "Usage: $0 KEY_PREFIX ACCOUNTS [STALL_SECONDS] [ORDER_STABLE_SECONDS] [INTERVAL]"
+    exit 1
+fi
+
 
 # 显示标题
 echo "=== StandX STATUS + PANIC PANEL ==="

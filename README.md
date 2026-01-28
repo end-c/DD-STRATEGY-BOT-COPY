@@ -232,3 +232,15 @@ stop_and_cancel.ps1用法：
 .\status.ps1 account_hp 12-14
 .\status.ps1 account_hp 12-14 -Watch 3 ：每 3 秒刷新一次，Ctrl+C 退出
 
+
+
+## 新增
+strategy_standx目录下:snapshot_account.py、cancel_all_orders.py
+
+新增脚本 win
+status_and_positions.ps1
+
+新增脚本 macos
+status_and_positions.sh
+chmod +x status_and_positions.sh
+./status_and_positions.sh -KEY_PREFIX account_mac -ACCOUNTS 1-19 [INTERVAL] 300 // 300s刷新一次
