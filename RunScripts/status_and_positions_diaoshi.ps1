@@ -128,10 +128,8 @@ function Monitor-Accounts {
         $snapshotOK = $false
         try {
             $index = ($accountId -replace ".*?(\d+)$",'$1')
-            Write-Host "Account index: $index"
 
             $private_key = & $PYTHON $DECRYPT $PASSWORD $KEY_PREFIX $index
-            Write-Host "Decrypted private key for account $accountId: $private_key"
 
             $snapshot = & $PYTHON $SNAPSHOT_PY `
                 --private_key $private_key `
@@ -141,8 +139,15 @@ function Monitor-Accounts {
             Write-Host "Snapshot response: $snapshot"
 
             if ($snapshot) {
-                $data = $snapshot | ConvertFrom-Json
-                Write-Host "Parsed JSON data: $data"
+                try {
+                    $data = $snapshot | ConvertFrom-Json
+                    Write-Host "Parsed JSON data: $data"
+                } catch {
+                    Write-Host "Failed to parse JSON: $($_.Exception.Message)"
+                    Write-Host "Snapshot data: $snapshot"
+                    # 可以在此处选择跳过当前循环，继续处理其他账户
+                    continue
+                }
 
                 $orders = 0
                 if ($data.open_orders) {
@@ -158,13 +163,13 @@ function Monitor-Accounts {
 
                 $snapshotOK = $true
             }
-        } 
+        }
         catch {
             Write-Host "Error occurred while querying the exchange state:" -ForegroundColor Red
             Write-Host "Error Message: $($_.Exception.Message)"
             Write-Host "Error StackTrace: $($_.Exception.StackTrace)"
             Write-Host "Error InnerException: $($_.Exception.InnerException)"
-
+            Write-Host "Raw snapshot data: $snapshot"
             $orders = "ERR"
             $posTxt = "ERR"
         }
