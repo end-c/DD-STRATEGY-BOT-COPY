@@ -589,72 +589,46 @@ try:
         exposure = abs(position.size)
         unrealized_pnl = position.unrealized_pnl  # 获取当前未实现盈亏
 
-        # --- 优先级 1：如果亏损超过阈值，不平仓 ---
-        if unrealized_pnl < -PNL_THRESHOLD:
-            # 如果亏损超过阈值，不进行平仓，直接跳过
-            pass
+        # --- 优先级 1：规模失控 ---
+        if exposure > MAX_POSITION_SIZE:
+            place_maker_close_orders(
+                adapter, SYMBOL, position,
+                GRID_CONFIG["price_step"],
+                price_spread,
+                close_ratio=0.5
+            )
 
-        else:
-            # --- 优先级 2：规模失控 ---
-            if exposure > MAX_POSITION_SIZE:
+        # --- 优先级 2：时间过长 ---
+        elif position_age > MAX_POSITION_AGE:
+            if (
+                POSITION_STATE["last_reduce_time"] is None or
+                now - POSITION_STATE["last_reduce_time"] > REDUCE_INTERVAL
+            ):
                 place_maker_close_orders(
                     adapter, SYMBOL, position,
                     GRID_CONFIG["price_step"],
                     price_spread,
-                    close_ratio=0.5
+                    close_ratio=0.3
                 )
+                POSITION_STATE["last_reduce_time"] = now
 
-            # --- 优先级 3：时间过长 ---
-            elif position_age > MAX_POSITION_AGE:
-                if (
-                    POSITION_STATE["last_reduce_time"] is None or
-                    now - POSITION_STATE["last_reduce_time"] > REDUCE_INTERVAL
-                ):
-                    place_maker_close_orders(
-                        adapter, SYMBOL, position,
-                        GRID_CONFIG["price_step"],
-                        price_spread,
-                        close_ratio=0.3
-                    )
-                    POSITION_STATE["last_reduce_time"] = now
-
-            # --- 优先级 4：趋势行情 ---
-            elif trend_state == "trend":
-                place_maker_close_orders(
-                    adapter, SYMBOL, position,
-                    GRID_CONFIG["price_step"],
-                    price_spread,
-                    close_ratio=0.4
-                )
-
-            # --- 优先级 5：盈亏控制（亏损没有超过阈值时按一定概率平仓）---
-            elif unrealized_pnl >= -PNL_THRESHOLD and unrealized_pnl < 0:
-                close_probability = random.random()  # 随机数，0到1之间
-                if close_probability < 0.5:  # 50%的概率平仓
-                    place_maker_close_orders(
-                        adapter, SYMBOL, position,
-                        GRID_CONFIG["price_step"],
-                        price_spread,
-                        close_ratio=0.3
-                    )
-
-            elif unrealized_pnl >= 0 and unrealized_pnl <= PNL_THRESHOLD:
-                # 如果未实现盈亏为正，按一定比例平仓
-                place_maker_close_orders(
-                    adapter, SYMBOL, position,
-                    GRID_CONFIG["price_step"],
-                    price_spread,
-                    close_ratio=0.4
-                )
-
-            elif unrealized_pnl >= PNL_THRESHOLD:
-                # 如果未实现盈亏超过阈值，一定平仓
-                place_maker_close_orders(
-                    adapter, SYMBOL, position,
-                    GRID_CONFIG["price_step"],
-                    price_spread,
-                    close_ratio=1.0
-                )
+        # --- 优先级 3：趋势行情 ---
+        elif trend_state == "trend":
+            place_maker_close_orders(
+                adapter, SYMBOL, position,
+                GRID_CONFIG["price_step"],
+                price_spread,
+                close_ratio=0.4
+            )
+        
+        elif unrealized_pnl >= PNL_THRESHOLD:
+            # 如果未实现盈亏超过阈值，一定平仓
+            place_maker_close_orders(
+                adapter, SYMBOL, position,
+                GRID_CONFIG["price_step"],
+                price_spread,
+                close_ratio=1.0
+            )
 
     else:
         POSITION_STATE["open_time"] = None
