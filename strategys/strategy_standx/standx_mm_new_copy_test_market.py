@@ -604,6 +604,7 @@ def run_strategy_cycle(adapter):
 
             # --- 优先级 1：规模失控 ---
             if exposure > MAX_POSITION_SIZE:
+                logging.info("because MAX_POSITION_SIZE,looking place_maker_close_orders")
                 place_maker_close_orders(
                     adapter, SYMBOL, position,
                     GRID_CONFIG["price_step"],
