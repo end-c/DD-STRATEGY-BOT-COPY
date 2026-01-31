@@ -584,7 +584,7 @@ def run_strategy_cycle(adapter):
     # chatgpt最新一次对话
 # ========= 7. 持仓与风险控制（完整做市控制器） =========
 try:
-    position = adapter.get_position(SYMBOL)
+    position = adapter.get_positions(SYMBOL)
     now = time.time()
 
     if position and position.size != Decimal("0"):
@@ -644,6 +644,8 @@ try:
         POSITION_STATE["last_reduce_time"] = None
 
 except Exception:
+    print("get_positions failed")
+    logging.info("get_positions failed")
     pass
 
 def main():
