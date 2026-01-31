@@ -581,72 +581,64 @@ def run_strategy_cycle(adapter):
             GRID_CONFIG.get('order_quantity', 0.0001)
         )
 
-    # chatgpt最新一次对话
-# ========= 7. 持仓与风险控制（完整做市控制器） =========
-try:
-    position = adapter.get_positions(SYMBOL)
-    now = time.time()
+        # chatgpt最新一次对话
+    # ========= 7. 持仓与风险控制（完整做市控制器） =========
+    try:
+        position = adapter.get_positions(SYMBOL)
+        now = time.time()
 
-    if position and position.size != Decimal("0"):
-        if POSITION_STATE["open_time"] is None:
-            POSITION_STATE["open_time"] = now
+        if position and position.size != Decimal("0"):
+            if POSITION_STATE["open_time"] is None:
+                POSITION_STATE["open_time"] = now
 
-        position_age = now - POSITION_STATE["open_time"]
-        exposure = abs(position.size)
-        unrealized_pnl = position.unrealized_pnl  # 获取当前未实现盈亏
+            position_age = now - POSITION_STATE["open_time"]
+            exposure = abs(position.size)
+            unrealized_pnl = position.unrealized_pnl  # 获取当前未实现盈亏
 
-        print(f"exposure: {exposure}, position_age: {position_age}")
-        logging.info(f"exposure: {exposure}, position_age: {position_age}")
+            print(f"exposure: {exposure}, position_age: {position_age}")
+            logging.info(f"exposure: {exposure}, position_age: {position_age}")
 
-        # --- 优先级 1：规模失控 ---
-        if exposure > MAX_POSITION_SIZE:
-            place_maker_close_orders(
-                adapter, SYMBOL, position,
-                GRID_CONFIG["price_step"],
-                price_spread,
-                close_ratio=0.5
-            )
-
-        # --- 优先级 2：时间过长 ---
-        elif position_age > MAX_POSITION_AGE:
-            if (
-                POSITION_STATE["last_reduce_time"] is None or
-                now - POSITION_STATE["last_reduce_time"] > REDUCE_INTERVAL
-            ):
+            # --- 优先级 1：规模失控 ---
+            if exposure > MAX_POSITION_SIZE:
                 place_maker_close_orders(
                     adapter, SYMBOL, position,
                     GRID_CONFIG["price_step"],
                     price_spread,
-                    close_ratio=0.3
+                    close_ratio=0.5
                 )
-                POSITION_STATE["last_reduce_time"] = now
 
-        # --- 优先级 3：趋势行情 ---
-        elif trend_state == "trend":
-            place_maker_close_orders(
-                adapter, SYMBOL, position,
-                GRID_CONFIG["price_step"],
-                price_spread,
-                close_ratio=0.4
-            )
-        
-        elif unrealized_pnl >= PNL_THRESHOLD:
-            # 如果未实现盈亏超过阈值，一定平仓
-            place_maker_close_orders(
-                adapter, SYMBOL, position,
-                GRID_CONFIG["price_step"],
-                price_spread,
-                close_ratio=1.0
-            )
+            # --- 优先级 2：时间过长 ---
+            elif position_age > MAX_POSITION_AGE:
+                if (
+                    POSITION_STATE["last_reduce_time"] is None or
+                    now - POSITION_STATE["last_reduce_time"] > REDUCE_INTERVAL
+                ):
+                    place_maker_close_orders(
+                        adapter, SYMBOL, position,
+                        GRID_CONFIG["price_step"],
+                        price_spread,
+                        close_ratio=0.3
+                    )
+                    POSITION_STATE["last_reduce_time"] = now
 
-    else:
-        POSITION_STATE["open_time"] = None
-        POSITION_STATE["last_reduce_time"] = None
+            # --- 优先级 3：趋势行情 ---          
+            elif unrealized_pnl >= PNL_THRESHOLD:
+                # 如果未实现盈利超过阈值，一定平仓
+                place_maker_close_orders(
+                    adapter, SYMBOL, position,
+                    GRID_CONFIG["price_step"],
+                    price_spread,
+                    close_ratio=1.0
+                )
 
-except Exception:
-    print("get_positions failed")
-    logging.info("get_positions failed")
-    pass
+        else:
+            POSITION_STATE["open_time"] = None
+            POSITION_STATE["last_reduce_time"] = None
+
+    except Exception:
+        print("get_positions failed")
+        logging.info("get_positions failed")
+        pass
 
 def main():
     # 解析命令行参数
