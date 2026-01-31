@@ -608,8 +608,8 @@ def run_strategy_cycle(adapter):
                 leverage = position.leverage
 
                 # 打印持仓信息
-                print(f"size: {size}, unrealized_pnl: {unrealized_pnl}, side: {side}, leverage:{leverage}")
-                logging.info(f"size: {size}, unrealized_pnl: {unrealized_pnl}, side: {side}, leverage:{leverage}")
+                print(f"size: {exposure}, unrealized_pnl: {unrealized_pnl}, side: {side}, leverage:{leverage}")
+                logging.info(f"size: {exposure}, unrealized_pnl: {unrealized_pnl}, side: {side}, leverage:{leverage}")
 
                 # --- 优先级 1：规模失控 ---
                 if exposure > MAX_POSITION_SIZE:
