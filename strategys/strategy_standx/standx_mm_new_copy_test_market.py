@@ -378,9 +378,6 @@ def place_maker_close_orders(
         close_price = mid_price - price_spread - price_step
         close_side = "buy"
 
-    print(f"Placing order: side={close_side}, price={int(close_price)}, quantity={close_size}")
-    logging.info(f"Placing order: side={close_side}, price={int(close_price)}, quantity={close_size}")
-
     try:
         adapter.place_order(
             symbol=symbol,
@@ -391,15 +388,17 @@ def place_maker_close_orders(
             time_in_force="gtc",
             reduce_only=True
         )
+        print(f"[MAKER-CLOSE-SUCCESS] side={close_side}, price={close_price}, size={close_size}")
+
         logging.info(
-            "[MAKER-CLOSE] side=%s, price=%d, size=%s",
+            "[MAKER-CLOSE-SUCCESS] side=%s, price=%d, size=%s",
             close_side,
             int(close_price),
             close_size
         )
     except Exception as e:
-        print(f"[MAKER-CLOSE][FAIL] {e}")
-        logging.error(f"[MAKER-CLOSE][FAIL] {e}", exc_info=True)  # 记录堆栈信息
+        print(f"[MAKER-CLOSE-FAIL] {e}")
+        logging.error(f"[MAKER-CLOSE-FAIL] {e}", exc_info=True)  # 记录堆栈信息
         pass
 
 
@@ -584,36 +583,22 @@ def run_strategy_cycle(adapter):
         # chatgpt最新一次对话
     # ========= 7. 持仓与风险控制（完整做市控制器） =========
     try:
-        print("get_positions looking")
-        logging.info("get_positions looking")
         positions = adapter.get_positions(SYMBOL)
-        print("get_positions jinqu")
-        logging.info("get_positions jinqu")
         now = time.time()
         if positions:  # 确保 positions 列表不为空
             for position in positions:
-                print(f"Position received")
-                logging.info(f"Position received")
-
                 # 获取各个属性
                 exposure = abs(position.size)
 
                 if exposure != Decimal("0"):
                     if POSITION_STATE["open_time"] is None:
                         POSITION_STATE["open_time"] = now
-                
+
                 unrealized_pnl = position.unrealized_pnl
                 position_age = now - POSITION_STATE["open_time"]
-                side = position.side
-                leverage = position.leverage
-
-                # 打印持仓信息
-                print(f"size: {exposure}, unrealized_pnl: {unrealized_pnl}, side: {side}, leverage:{leverage}")
-                logging.info(f"size: {exposure}, unrealized_pnl: {unrealized_pnl}, side: {side}, leverage:{leverage}")
 
                 # --- 优先级 1：规模失控 ---
                 if exposure > MAX_POSITION_SIZE:
-                    logging.info("because MAX_POSITION_SIZE, looking place_maker_close_orders")
                     place_maker_close_orders(
                         adapter, SYMBOL, position,
                         GRID_CONFIG["price_step"],
