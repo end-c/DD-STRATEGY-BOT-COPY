@@ -114,19 +114,9 @@ def main():
 
         # ---------- balance ----------
     try:
-        balances = adapter.get_balance()
-        if balances:
-            summary_b = []
-            for b in balances:
-                snapshot["balances"].append({
-                    "total_balance": decimal_to_str(b.total_balance),
-                    "available_balance": decimal_to_str(b.available_balance),
-                    "equity": decimal_to_str(b.equity),
-                    "margin_used": decimal_to_str(b.margin_used),
-                    "margin_available": decimal_to_str(b.margin_available),
-                })
-                summary_b.append(f"{b.total_balance}:{b.available_balance}")
-            snapshot["balance_summary"] = ",".join(summary_b)
+        balance = adapter.get_balance()
+        if balance:
+            snapshot["balance_summary"] = f"{balance.total_balance}:{balance.available_balance}"
         else:
             snapshot["balance_summary"] = "FLAT"
     except Exception as e:

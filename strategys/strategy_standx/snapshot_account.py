@@ -10,7 +10,7 @@ import os
 import json
 import argparse
 from decimal import Decimal
-from datetime import datetime
+from datetime import datetime, timezone
 
 # ---------- 路径处理 ----------
 current_dir = os.path.dirname(os.path.abspath(__file__))
@@ -63,7 +63,7 @@ def main():
     snapshot = {
         "account_id": account_id,
         "symbol": SYMBOL,
-        "timestamp": datetime.utcnow().isoformat() + "Z",
+        "timestamp": datetime.now(timezone.utc).isoformat(),
         "open_orders": [],
         "open_orders_count": 0,
         "positions": [],
