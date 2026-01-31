@@ -596,8 +596,14 @@ def run_strategy_cycle(adapter):
                 logging.info(f"Position received")
 
                 # 获取各个属性
-                size = position.size
+                exposure = abs(position.size)
+
+                if exposure != Decimal("0"):
+                    if POSITION_STATE["open_time"] is None:
+                        POSITION_STATE["open_time"] = now
+                
                 unrealized_pnl = position.unrealized_pnl
+                position_age = now - POSITION_STATE["open_time"]
                 side = position.side
                 leverage = position.leverage
 
@@ -605,10 +611,8 @@ def run_strategy_cycle(adapter):
                 print(f"size: {size}, unrealized_pnl: {unrealized_pnl}, side: {side}, leverage:{leverage}")
                 logging.info(f"size: {size}, unrealized_pnl: {unrealized_pnl}, side: {side}, leverage:{leverage}")
 
-                now = time.time()
-
                 # --- 优先级 1：规模失控 ---
-                if abs(size) > MAX_POSITION_SIZE:
+                if exposure > MAX_POSITION_SIZE:
                     logging.info("because MAX_POSITION_SIZE, looking place_maker_close_orders")
                     place_maker_close_orders(
                         adapter, SYMBOL, position,
@@ -632,9 +636,8 @@ def run_strategy_cycle(adapter):
                         )
                         POSITION_STATE["last_reduce_time"] = now
 
-                # --- 优先级 3：趋势行情 ---          
+                # --- 优先级 如果未实现盈利超过阈值，一定平仓 ---          
                 if unrealized_pnl >= PNL_THRESHOLD:
-                    # 如果未实现盈利超过阈值，一定平仓
                     place_maker_close_orders(
                         adapter, SYMBOL, position,
                         GRID_CONFIG["price_step"],
@@ -644,6 +647,8 @@ def run_strategy_cycle(adapter):
         else:
             print("No positions found. positions list is null")
             logging.info("No positions found.positions list is null")
+            POSITION_STATE["open_time"] = None
+            POSITION_STATE["last_reduce_time"] = None
     except Exception as e:
         # 捕获异常并记录详细信息
         print(f"get_positions failed: {e}")
