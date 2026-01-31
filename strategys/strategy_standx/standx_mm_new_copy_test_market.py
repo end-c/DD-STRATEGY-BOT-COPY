@@ -31,12 +31,12 @@ POSITION_STATE = {
     "open_time": None,
     "last_reduce_time": None
 }
-MAX_POSITION_SIZE = Decimal("0.0002")
+MAX_POSITION_SIZE = Decimal("0.0008")
 MAX_POSITION_AGE  = 300
 REDUCE_INTERVAL   = 60
 
-# 设置固定的亏损阈值 pnl_threshold（例如：亏损超过 3 USDT 时不会平仓，盈利超过3 USDT时平仓，在这中间一定概率或者一定比例平仓）
-PNL_THRESHOLD = Decimal("3.0")  # 固定亏损阈值，单位为 USDT 或其它适用单位
+# 设置固定的盈利阈值 pnl_threshold（例如：盈利超过1 USDT时平仓）
+PNL_THRESHOLD = Decimal("1.0")  # 固定亏损阈值，单位为 USDT 或其它适用单位
 
 def load_config(config_file="config.yaml"):
     """
