@@ -584,7 +584,11 @@ def run_strategy_cycle(adapter):
         # chatgpt最新一次对话
     # ========= 7. 持仓与风险控制（完整做市控制器） =========
     try:
+        print("get_positions looking")
+        logging.info("get_positions looking")
         position = adapter.get_positions(SYMBOL)
+        print("get_positions jinqu")
+        logging.info("get_positions jinqu")
         now = time.time()
 
         if position and position.size != Decimal("0"):
@@ -632,6 +636,8 @@ def run_strategy_cycle(adapter):
                 )
 
         else:
+            print("get_positions 0")
+            logging.info("get_positions 0")
             POSITION_STATE["open_time"] = None
             POSITION_STATE["last_reduce_time"] = None
 
