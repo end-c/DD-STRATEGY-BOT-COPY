@@ -586,66 +586,68 @@ def run_strategy_cycle(adapter):
     try:
         print("get_positions looking")
         logging.info("get_positions looking")
-        position = adapter.get_positions(SYMBOL)
+        positions = adapter.get_positions(SYMBOL)
         print("get_positions jinqu")
         logging.info("get_positions jinqu")
         now = time.time()
+        if positions:  # 确保 positions 列表不为空
+            for position in positions:
+                print(f"Position received")
+                logging.info(f"Position received")
 
-        if position and position.size != Decimal("0"):
-            if POSITION_STATE["open_time"] is None:
-                POSITION_STATE["open_time"] = now
+                # 获取各个属性
+                size = position.size
+                unrealized_pnl = position.unrealized_pnl
+                side = position.side
+                leverage = position.leverage
 
-            position_age = now - POSITION_STATE["open_time"]
-            exposure = abs(position.size)
-            unrealized_pnl = position.unrealized_pnl  # 获取当前未实现盈亏
+                # 打印持仓信息
+                print(f"size: {size}, unrealized_pnl: {unrealized_pnl}, side: {side}, leverage:{leverage}")
+                logging.info(f"size: {size}, unrealized_pnl: {unrealized_pnl}, side: {side}, leverage:{leverage}")
 
-            print(f"exposure: {exposure}, position_age: {position_age}")
-            logging.info(f"exposure: {exposure}, position_age: {position_age}")
+                now = time.time()
 
-            # --- 优先级 1：规模失控 ---
-            if exposure > MAX_POSITION_SIZE:
-                logging.info("because MAX_POSITION_SIZE,looking place_maker_close_orders")
-                place_maker_close_orders(
-                    adapter, SYMBOL, position,
-                    GRID_CONFIG["price_step"],
-                    price_spread,
-                    close_ratio=0.5
-                )
-
-            # --- 优先级 2：时间过长 ---
-            elif position_age > MAX_POSITION_AGE:
-                if (
-                    POSITION_STATE["last_reduce_time"] is None or
-                    now - POSITION_STATE["last_reduce_time"] > REDUCE_INTERVAL
-                ):
+                # --- 优先级 1：规模失控 ---
+                if abs(size) > MAX_POSITION_SIZE:
+                    logging.info("because MAX_POSITION_SIZE, looking place_maker_close_orders")
                     place_maker_close_orders(
                         adapter, SYMBOL, position,
                         GRID_CONFIG["price_step"],
                         price_spread,
-                        close_ratio=0.3
+                        close_ratio=0.5
                     )
-                    POSITION_STATE["last_reduce_time"] = now
 
-            # --- 优先级 3：趋势行情 ---          
-            elif unrealized_pnl >= PNL_THRESHOLD:
-                # 如果未实现盈利超过阈值，一定平仓
-                place_maker_close_orders(
-                    adapter, SYMBOL, position,
-                    GRID_CONFIG["price_step"],
-                    price_spread,
-                    close_ratio=1.0
-                )
+                # --- 优先级 2：时间过长 ---
+                position_age = now - POSITION_STATE.get("open_time", now)
+                if position_age > MAX_POSITION_AGE:
+                    if (
+                        POSITION_STATE.get("last_reduce_time") is None or
+                        now - POSITION_STATE["last_reduce_time"] > REDUCE_INTERVAL
+                    ):
+                        place_maker_close_orders(
+                            adapter, SYMBOL, position,
+                            GRID_CONFIG["price_step"],
+                            price_spread,
+                            close_ratio=0.3
+                        )
+                        POSITION_STATE["last_reduce_time"] = now
 
+                # --- 优先级 3：趋势行情 ---          
+                if unrealized_pnl >= PNL_THRESHOLD:
+                    # 如果未实现盈利超过阈值，一定平仓
+                    place_maker_close_orders(
+                        adapter, SYMBOL, position,
+                        GRID_CONFIG["price_step"],
+                        price_spread,
+                        close_ratio=1.0
+                    )
         else:
-            print("get_positions 0")
-            logging.info("get_positions 0")
-            POSITION_STATE["open_time"] = None
-            POSITION_STATE["last_reduce_time"] = None
-
-    except Exception:
-        print("get_positions failed")
-        logging.info("get_positions failed")
-        pass
+            print("No positions found. positions list is null")
+            logging.info("No positions found.positions list is null")
+    except Exception as e:
+        # 捕获异常并记录详细信息
+        print(f"get_positions failed: {e}")
+        logging.error(f"get_positions failed: {e}", exc_info=True)  # 记录堆栈信息
 
 def main():
     # 解析命令行参数
