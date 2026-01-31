@@ -29,7 +29,7 @@ SNAP_DIR="$CODE_ROOT/snapshots"
 PYTHON="python3" # 在MacOS上使用python3
 DECRYPT="$PROC_DIR/decrypt_keys.py"
 CANCEL_PY="$PROC_DIR/cancel_all_orders.py"
-SNAPSHOT_PY="$PROC_DIR/snapshot_account.py"
+SNAPSHOT_PY="$PROC_DIR/snapshot_account_balance.py"
 
 # 创建快照目录
 mkdir -p "$SNAP_DIR"
@@ -87,8 +87,8 @@ read -s PASSWORD
 ACCOUNT_SET=($(parse_accounts "$KEY_PREFIX" "$ACCOUNTS"))
 
 # 表头
-printf "%-16s %-9s %-6s %-10s %-28s %s\n" "ACCOUNT" "STATUS" "PID" "ORDERS" "POSITION" "NOTE"
-echo "--------------------------------------------------------------------------------------"
+printf "%-16s %-9s %-6s %-10s %-28s %-16s %s\n" "ACCOUNT" "STATUS" "PID" "ORDERS" "POSITION" "BALANCE" "NOTE"
+echo "---------------------------------------------------------------------------------------------------------"
 
 # 实时监控（watch）
 monitor_accounts() {
@@ -96,8 +96,8 @@ monitor_accounts() {
     clear
 
     # 表头
-    printf "%-16s %-9s %-6s %-10s %-28s %s\n" "ACCOUNT" "STATUS" "PID" "ORDERS" "POSITION" "NOTE"
-    echo "--------------------------------------------------------------------------------------"
+    printf "%-16s %-9s %-6s %-10s %-28s %-16s %s\n" "ACCOUNT" "STATUS" "PID" "ORDERS" "POSITION" "BALANCE" "NOTE"
+    echo "---------------------------------------------------------------------------------------------------------"
 
     for accountId in "${ACCOUNT_SET[@]}"; do
         PID_FILE="$LOG_DIR/$accountId.pid"
@@ -177,7 +177,7 @@ monitor_accounts() {
         fi
 
         # 输出当前状态
-        printf "%-16s %-9s %-6s %-10s %-28s %s\n" "$accountId" "$status" "$pidTxt" "$orders" "$posTxt" "$note"
+        printf "%-16s %-9s %-6s %-10s %-28s %-16s %s\n" "ACCOUNT" "STATUS" "PID" "ORDERS" "POSITION" "BALANCE" "NOTE"
     done
 }
 
