@@ -4,9 +4,9 @@ set -euo pipefail
 # 参数部分
 KEY_PREFIX="${1:-}"
 ACCOUNTS="${2:-}"
-STALL_SECONDS="${3:-180}"
-ORDER_STABLE_SECONDS="${4:-180}"
-INTERVAL="${5:-0}"
+INTERVAL="${3:-0}"
+STALL_SECONDS="${4:-180}"
+ORDER_STABLE_SECONDS="${5:-180}"
 
 # 检查必需的参数是否提供
 if [ -z "$KEY_PREFIX" ] || [ -z "$ACCOUNTS" ]; then
