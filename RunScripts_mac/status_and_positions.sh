@@ -163,7 +163,11 @@ monitor_accounts() {
             fi
         fi
 
-        stall=$(( stallByLog && stallByOrders ))
+        if [[ "$stallByLog" == true && "$stallByOrders" == true ]]; then
+            stall=true
+        else
+            stall=false
+        fi
 
         # ---------- 状态判定 ----------
         if [[ "$procAlive" == false ]]; then
