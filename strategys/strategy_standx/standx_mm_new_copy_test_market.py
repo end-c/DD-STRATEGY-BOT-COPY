@@ -35,6 +35,8 @@ MAX_POSITION_SIZE = Decimal("0.0002")
 MAX_POSITION_AGE  = 300
 REDUCE_INTERVAL   = 60
 
+# 设置固定的亏损阈值 pnl_threshold（例如：亏损超过 3 USDT 时不会平仓，盈利超过3 USDT时平仓，在这中间一定概率或者一定比例平仓）
+PNL_THRESHOLD = Decimal("3.0")  # 固定亏损阈值，单位为 USDT 或其它适用单位
 
 def load_config(config_file="config.yaml"):
     """
@@ -349,6 +351,8 @@ def place_maker_close_orders(
     Maker-only 平仓：
     用限价单，慢慢减仓，不制造 Taker 行为
     """
+    print("Entering place_maker_close_orders function...")  # Debug 语句
+    logging.info("Entering place_maker_close_orders function...")  # Debug 语句
 
     size = abs(position.size)
     side = position.side  # long / short
@@ -374,6 +378,9 @@ def place_maker_close_orders(
         close_price = mid_price - price_spread - price_step
         close_side = "buy"
 
+    print(f"Placing order: side={close_side}, price={int(close_price)}, quantity={close_size}")
+    logging.info(f"Placing order: side={close_side}, price={int(close_price)}, quantity={close_size}")
+
     try:
         adapter.place_order(
             symbol=symbol,
@@ -392,6 +399,7 @@ def place_maker_close_orders(
         )
     except Exception as e:
         print(f"[MAKER-CLOSE][FAIL] {e}")
+        logging.error(f"[MAKER-CLOSE][FAIL] {e}", exc_info=True)  # 记录堆栈信息
         pass
 
 
@@ -574,64 +582,69 @@ def run_strategy_cycle(adapter):
         )
 
     # chatgpt最新一次对话
-    # ========= 7. 持仓与风险控制（完整做市控制器） =========
-    try:
-        position = adapter.get_position(SYMBOL)
-        now = time.time()
+# ========= 7. 持仓与风险控制（完整做市控制器） =========
+try:
+    position = adapter.get_position(SYMBOL)
+    now = time.time()
 
-        if position and position.size != Decimal("0"):
-            if POSITION_STATE["open_time"] is None:
-                POSITION_STATE["open_time"] = now
+    if position and position.size != Decimal("0"):
+        if POSITION_STATE["open_time"] is None:
+            POSITION_STATE["open_time"] = now
 
-            position_age = now - POSITION_STATE["open_time"]
-            exposure = abs(position.size)
+        position_age = now - POSITION_STATE["open_time"]
+        exposure = abs(position.size)
+        unrealized_pnl = position.unrealized_pnl  # 获取当前未实现盈亏
 
-            # print(
-            #     f"[HOLDING] size={position.size}, "
-            #     f"age={int(position_age)}s, "
-            #     f"trend={trend_state}"
-            # )
+        print(f"exposure: {exposure}, position_age: {position_age}")
+        logging.info(f"exposure: {exposure}, position_age: {position_age}")
 
-            # --- 优先级 1：规模失控 ---
-            if exposure > MAX_POSITION_SIZE:
+        # --- 优先级 1：规模失控 ---
+        if exposure > MAX_POSITION_SIZE:
+            place_maker_close_orders(
+                adapter, SYMBOL, position,
+                GRID_CONFIG["price_step"],
+                price_spread,
+                close_ratio=0.5
+            )
+
+        # --- 优先级 2：时间过长 ---
+        elif position_age > MAX_POSITION_AGE:
+            if (
+                POSITION_STATE["last_reduce_time"] is None or
+                now - POSITION_STATE["last_reduce_time"] > REDUCE_INTERVAL
+            ):
                 place_maker_close_orders(
                     adapter, SYMBOL, position,
                     GRID_CONFIG["price_step"],
                     price_spread,
-                    close_ratio=0.5
+                    close_ratio=0.3
                 )
+                POSITION_STATE["last_reduce_time"] = now
 
-            # --- 优先级 2：时间过长 ---
-            elif position_age > MAX_POSITION_AGE:
-                if (
-                    POSITION_STATE["last_reduce_time"] is None or
-                    now - POSITION_STATE["last_reduce_time"] > REDUCE_INTERVAL
-                ):
-                    place_maker_close_orders(
-                        adapter, SYMBOL, position,
-                        GRID_CONFIG["price_step"],
-                        price_spread,
-                        close_ratio=0.3
-                    )
-                    POSITION_STATE["last_reduce_time"] = now
+        # --- 优先级 3：趋势行情 ---
+        elif trend_state == "trend":
+            place_maker_close_orders(
+                adapter, SYMBOL, position,
+                GRID_CONFIG["price_step"],
+                price_spread,
+                close_ratio=0.4
+            )
+        
+        elif unrealized_pnl >= PNL_THRESHOLD:
+            # 如果未实现盈亏超过阈值，一定平仓
+            place_maker_close_orders(
+                adapter, SYMBOL, position,
+                GRID_CONFIG["price_step"],
+                price_spread,
+                close_ratio=1.0
+            )
 
-            # --- 优先级 3：趋势行情 ---
-            elif trend_state == "trend":
-                place_maker_close_orders(
-                    adapter, SYMBOL, position,
-                    GRID_CONFIG["price_step"],
-                    price_spread,
-                    close_ratio=0.4
-                )
+    else:
+        POSITION_STATE["open_time"] = None
+        POSITION_STATE["last_reduce_time"] = None
 
-        else:
-            POSITION_STATE["open_time"] = None
-            POSITION_STATE["last_reduce_time"] = None
-
-    except Exception:
-        pass
-
-
+except Exception:
+    pass
 
 def main():
     # 解析命令行参数
@@ -659,7 +672,9 @@ def main():
         filename=f"logs/{account_id}.log",
         level=logging.INFO,
         format="%(asctime)s | %(levelname)s | %(message)s")
-
+    
+    logging.info("This is an info message")
+    
     # 加载配置文件
     try:
         # print(f"加载配置文件: {args.config}")
