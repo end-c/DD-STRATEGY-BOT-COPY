@@ -583,7 +583,7 @@ def run_strategy_cycle(adapter):
         # chatgpt最新一次对话
     # ========= 7. 持仓与风险控制（完整做市控制器） =========
     try:
-        positions = adapter.get_positions(SYMBOL)
+        positions = adapter.get_positions(symbol=SYMBOL)
         now = time.time()
         if positions:  # 确保 positions 列表不为空
             for position in positions:
@@ -699,17 +699,19 @@ def main():
         print("begin begin la~~~~~~~~~~~~~")
         
         try:
-            positions = adapter.get_positions(SYMBOL)
+            positions = adapter.get_positions(symbol=SYMBOL)
             if positions:  # 确保 positions 列表不为空
                 for position in positions:
                     # 获取杠杆属性
                     leverage = position.leverage
                     # --- 优先级 1：规模失控 ---
-                    if leverage <= 3:
-                        pass
+                    if leverage > 3:
+                        print(f"leverage pass 3: {accountId}")  # 输出错误信息
+                        return None
+            else:
+                print(f"positions is null,dont know leverage")
         except Exception as e:
-            print(f"leverage pass 3: {accountId}: {str(e)}")  # 输出错误信息
-            logging.error(f"leverage pass 3: {accountId}: {str(e)}", exc_info=True)  # 记录详细日志
+            print(f"get leverage has wrong: {accountId}: {str(e)}")  # 输出错误信息
             return None  # 跳过当前账号，继续下一个账号
         
         sleep_interval = GRID_CONFIG.get('sleep_interval', 60)
