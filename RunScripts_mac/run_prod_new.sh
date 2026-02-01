@@ -146,12 +146,13 @@ for accountId in "${ACCOUNT_SET[@]}"; do
   # 启动策略（后台）
   ###################################
   "$PYTHON_EXE" \
-    "$PROC_SCRIPT" \
-    --private_key "$private_key" \
-    --account_id "$accountId" \
-    >> "$LOG" 2>&1 &
+      "$PROC_SCRIPT" \
+      --private_key "$private_key" \
+      --account_id "$accountId" \
+      2>&1 | tee -a "$LOG"
 
-  PID=$!
+  PID=$$
+
   echo "$PID" > "$PID_FILE"
   echo "Started $accountId (PID=$PID)"
 
