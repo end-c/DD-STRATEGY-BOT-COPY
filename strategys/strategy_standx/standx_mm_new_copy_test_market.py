@@ -597,20 +597,28 @@ def run_strategy_cycle(adapter):
                 unrealized_pnl = position.unrealized_pnl
                 position_age = now - POSITION_STATE["open_time"]
 
+                # --- 优先级0 如果未实现盈利超过阈值，一定平仓 ---          
+                if unrealized_pnl >= PNL_THRESHOLD:
+                    place_maker_close_orders(
+                        adapter, SYMBOL, position,
+                        GRID_CONFIG["price_step"],
+                        price_spread,
+                        close_ratio=1.0
+                    )
+
                 # --- 优先级 1：规模失控 ---
-                if exposure > MAX_POSITION_SIZE:
+                elif exposure > MAX_POSITION_SIZE:
                     place_maker_close_orders(
                         adapter, SYMBOL, position,
                         GRID_CONFIG["price_step"],
                         price_spread,
                         close_ratio=0.5
                     )
-
+        
                 # --- 优先级 2：时间过长 ---
-                position_age = now - POSITION_STATE.get("open_time", now)
-                if position_age > MAX_POSITION_AGE:
+                elif position_age > MAX_POSITION_AGE:
                     if (
-                        POSITION_STATE.get("last_reduce_time") is None or
+                        POSITION_STATE["last_reduce_time"] is None or
                         now - POSITION_STATE["last_reduce_time"] > REDUCE_INTERVAL
                     ):
                         place_maker_close_orders(
@@ -621,14 +629,6 @@ def run_strategy_cycle(adapter):
                         )
                         POSITION_STATE["last_reduce_time"] = now
 
-                # --- 优先级 如果未实现盈利超过阈值，一定平仓 ---          
-                if unrealized_pnl >= PNL_THRESHOLD:
-                    place_maker_close_orders(
-                        adapter, SYMBOL, position,
-                        GRID_CONFIG["price_step"],
-                        price_spread,
-                        close_ratio=1.0
-                    )
         else:
             print("No positions found. positions list is null")
             logging.info("No positions found.positions list is null")
