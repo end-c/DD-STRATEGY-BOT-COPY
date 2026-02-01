@@ -149,7 +149,7 @@ for accountId in "${ACCOUNT_SET[@]}"; do
       "$PROC_SCRIPT" \
       --private_key "$private_key" \
       --account_id "$accountId" \
-      2>&1 | tee -a "$LOG" &
+      >> "$LOG" 2>&1 &
 
   PID=$!
 
