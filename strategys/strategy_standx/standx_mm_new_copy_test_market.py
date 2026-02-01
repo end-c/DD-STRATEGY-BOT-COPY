@@ -705,11 +705,11 @@ def main():
                     # 获取杠杆属性
                     leverage = position.leverage
                     # --- 优先级 1：规模失控 ---
-                    if leverage <= 10:
+                    if leverage <= 3:
                         pass
         except Exception as e:
-            print(f"leverage pass 10: {accountId}: {str(e)}")  # 输出错误信息
-            logging.error(f"leverage pass 10: {accountId}: {str(e)}", exc_info=True)  # 记录详细日志
+            print(f"leverage pass 3: {accountId}: {str(e)}")  # 输出错误信息
+            logging.error(f"leverage pass 3: {accountId}: {str(e)}", exc_info=True)  # 记录详细日志
             return None  # 跳过当前账号，继续下一个账号
         
         sleep_interval = GRID_CONFIG.get('sleep_interval', 60)
