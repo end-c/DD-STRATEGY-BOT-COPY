@@ -352,7 +352,7 @@ def place_maker_close_orders(
     用限价单，慢慢减仓，不制造 Taker 行为
     """
     print("Entering place_maker_close_orders function...")  # Debug 语句
-    logging.info("Entering place_maker_close_orders function...")  # Debug 语句
+    # logging.info("Entering place_maker_close_orders function...")  # Debug 语句
 
     size = abs(position.size)
     side = position.side  # long / short
@@ -388,14 +388,14 @@ def place_maker_close_orders(
             time_in_force="gtc",
             reduce_only=True
         )
-        print(f"[MAKER-CLOSE-SUCCESS] side={close_side}, price={close_price}, size={close_size}")
+        # print(f"[MAKER-CLOSE-SUCCESS] side={close_side}, price={close_price}, size={close_size}")
 
-        logging.info(
-            "[MAKER-CLOSE-SUCCESS] side=%s, price=%d, size=%s",
-            close_side,
-            int(close_price),
-            close_size
-        )
+        # logging.info(
+        #     "[MAKER-CLOSE-SUCCESS] side=%s, price=%d, size=%s",
+        #     close_side,
+        #     int(close_price),
+        #     close_size
+        # )
     except Exception as e:
         print(f"[MAKER-CLOSE-FAIL] {e}")
         logging.error(f"[MAKER-CLOSE-FAIL] {e}", exc_info=True)  # 记录堆栈信息
@@ -631,7 +631,6 @@ def run_strategy_cycle(adapter):
 
         else:
             print("No positions found. positions list is null")
-            logging.info("No positions found.positions list is null")
             POSITION_STATE["open_time"] = None
             POSITION_STATE["last_reduce_time"] = None
     except Exception as e:
@@ -666,7 +665,7 @@ def main():
         level=logging.INFO,
         format="%(asctime)s | %(levelname)s | %(message)s")
     
-    logging.info("This is an info message")
+    # logging.info("This is an info message")
     
     # 加载配置文件
     try:
@@ -709,7 +708,7 @@ def main():
                         print(f"leverage pass 3: {account_id}")  # 输出错误信息
                         return None
             else:
-                print(f"positions is null,dont know leverage")
+                print(f"{account_id}:positions list is null,dont know leverage")
         except Exception as e:
             print(f"get leverage has wrong: {account_id}: {str(e)}")  # 输出错误信息
             return None  # 跳过当前账号，继续下一个账号
