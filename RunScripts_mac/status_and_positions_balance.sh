@@ -108,6 +108,7 @@ monitor_accounts() {
         pidTxt="-"
         orders="ERR"
         posTxt="ERR"
+        balTxt="ERR"
 
         # ---------- 进程 ----------
         procAlive=false
@@ -137,9 +138,15 @@ monitor_accounts() {
             data=$(echo "$snapshot" | jq -r '.')
             orders=$(echo "$data" | jq '.open_orders | length')
             posTxt=$(echo "$data" | jq -r '.position_summary')
+            balTxt=$(echo "$data" | jq -r '.balance_summary')
 
             if [[ -z "$posTxt" ]]; then
                 posTxt="flat"
+            fi
+            
+
+            if [[ -z "$balTxt" ]]; then
+                balTxt="flat"
             fi
 
             snapshotOK=true
@@ -181,7 +188,7 @@ monitor_accounts() {
         fi
 
         # 输出当前状态
-        printf "%-16s %-9s %-6s %-10s %-28s %-16s %s\n" "ACCOUNT" "STATUS" "PID" "ORDERS" "POSITION" "BALANCE" "NOTE"
+        printf "%-16s %-9s %-6s %-10s %-28s %-16s %s\n" "$accountId" "$status" "$pidTxt" "$orders" "$posTxt" "$balTxt" "$note"
     done
 }
 
