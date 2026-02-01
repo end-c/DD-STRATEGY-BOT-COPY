@@ -68,7 +68,6 @@ def main():
         "open_orders_count": 0,
         "positions": [],
         "position_summary": "FLAT",
-        "balances": [],
         "balance_summary": "FLAT",
     }
 

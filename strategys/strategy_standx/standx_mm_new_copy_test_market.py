@@ -706,12 +706,12 @@ def main():
                     leverage = position.leverage
                     # --- 优先级 1：规模失控 ---
                     if leverage > 3:
-                        print(f"leverage pass 3: {accountId}")  # 输出错误信息
+                        print(f"leverage pass 3: {account_id}")  # 输出错误信息
                         return None
             else:
                 print(f"positions is null,dont know leverage")
         except Exception as e:
-            print(f"get leverage has wrong: {accountId}: {str(e)}")  # 输出错误信息
+            print(f"get leverage has wrong: {account_id}: {str(e)}")  # 输出错误信息
             return None  # 跳过当前账号，继续下一个账号
         
         sleep_interval = GRID_CONFIG.get('sleep_interval', 60)

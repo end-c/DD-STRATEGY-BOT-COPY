@@ -8,7 +8,7 @@ param(
     [int]$STALL_SECONDS = 180,
     [int]$ORDER_STABLE_SECONDS = 180,
 
-    [int]$Interval = 0  # 设置间隔时间（秒），0为不间隔，执行一次后结束
+    [int]$Watch = 0  # 设置间隔时间（秒），0为不间隔，执行一次后结束
 )
 
 [Console]::OutputEncoding = [Text.Encoding]::UTF8
@@ -200,11 +200,11 @@ function Monitor-Accounts {
 
 # ---------- 监控执行 ----------
 
-if ($Interval -gt 0) {
+if ($Watch -gt 0) {
     # Watch模式，持续执行
     while ($true) {
         Monitor-Accounts
-        Start-Sleep -Seconds $Interval
+        Start-Sleep -Seconds $Watch
     }
 } else {
     # 单次执行
